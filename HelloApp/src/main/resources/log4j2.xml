@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="ERROR" monitorInterval="5">
+<Appenders>
+<Console name="CONSOLE" target="SYSTEM_OUT" >
+  <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level  %c - %msg%n" />
+</Console>
+    <File name="MyFile" fileName="app.log" append="false">
+        <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+    </File>
+    <!--<Socket name="socket" host="localhost" port="4445">-->
+        <!--<SerializedLayout />-->
+    <!--</Socket>-->
+
+</Appenders>
+<Loggers>
+<Root level="error">
+        <AppenderRef ref="CONSOLE" />
+</Root>
+
+    <!-- Jetty reports exceptions at servlet level at WARN settings -->
+    <Logger name="org.eclipse.jetty" level="warn"/>
+
+    <!-- The annoying file system scanner for redeploying changes -->
+    <Logger name="org.eclipse.jetty.util.Scanner" level="error"/>
+    <Logger name="org.springframework" level="error"/>
+    <Logger name="hello" level="debug"/>
+
+</Loggers>
+</Configuration>

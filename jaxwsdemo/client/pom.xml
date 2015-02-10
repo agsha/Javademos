@@ -1,0 +1,192 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>jaxws</groupId>
+  <artifactId>client</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>client</name>
+  <url>http://maven.apache.org</url>
+    <properties>
+        <global.basedir>${project.basedir}</global.basedir>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>4.1.4.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- The core log4j deps -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.1</version>
+        </dependency>
+
+        <!-- TODO: make JMX work-->
+        <dependency>
+        	<groupId>org.apache.logging.log4j</groupId>
+        	<artifactId>log4j-jmx-gui</artifactId>
+        	<version>2.1</version>
+        </dependency>
+
+        <!-- finish -->
+
+        <!-- junit, guava, guice, commons-lang, commons-io,  jackson-databind, good things to have in any project-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
+        <dependency>
+        	<groupId>com.google.guava</groupId>
+        	<artifactId>guava</artifactId>
+        	<version>18.0</version>
+        </dependency>
+        <dependency>
+        	<groupId>com.fasterxml.jackson.core</groupId>
+        	<artifactId>jackson-databind</artifactId>
+        	<version>2.5.0</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.commons</groupId>
+        	<artifactId>commons-lang3</artifactId>
+        	<version>3.3.2</version>
+        </dependency>
+        <dependency>
+        	<groupId>commons-io</groupId>
+        	<artifactId>commons-io</artifactId>
+        	<version>2.4</version>
+        </dependency>
+
+
+        <!-- Enable spring core and test with logging to log4j2 -->
+        <!-- core slf4j apis -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.10</version>
+        </dependency>
+        <!-- from jcl to slf4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.10</version>
+        </dependency>
+        <!-- from slf4j to log4j2 -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+        	<groupId>org.springframework</groupId>
+        	<artifactId>spring-test</artifactId>
+        </dependency>
+        <!-- finish -->
+        <dependency>
+        	<groupId>com.sun.xml.wss</groupId>
+        	<artifactId>xws-security</artifactId>
+        	<version>3.0</version>
+        </dependency>
+
+    </dependencies>
+    <build>
+        <finalName>HelloApp</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>properties-maven-plugin</artifactId>
+              <version>1.0-alpha-2</version>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>set-system-properties</goal>
+                  </goals>
+                  <configuration>
+                    <properties>
+                      <!-- makes jetty log the exception if it fails to initialize slf4j -->
+                      <property>
+                        <name>org.eclipse.jetty.util.log.IGNORED</name>
+                        <value>false</value>
+                      </property>
+                      <!-- this can be uncommented to debug startup log4j itself,
+                           e.g. how it locates log4j.properties etc -->
+
+                      <!--<property>-->
+                        <!--<name>log4j.debug</name>-->
+                        <!--<value></value>-->
+                      <!--</property>-->
+                      <!-- this tells where the log4j configuration is -->
+
+                      <property>
+                        <name>log4j.configurationFile</name>
+                        <value>file://${global.basedir}/src/main/resources/log4j2.xml</value>
+                      </property>
+
+                    </properties>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+
+            <plugin>
+                <!-- wsgen for wsdl file generation -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <version>1.11</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <packageName>hello.gen</packageName>
+                            <wsdlUrls>
+                                <wsdlUrl>http://localhost:8080/ws/v8/configurationservice?wsdl</wsdlUrl>
+                                <wsdlUrl>http://localhost:8080/ws/v8/defectservice?wsdl</wsdlUrl>
+                            </wsdlUrls>
+                            <verbose>true</verbose>
+                            <sourceDestDir>${basedir}/src/main/java</sourceDestDir>
+                            <target>2.1</target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+
+    </build>
+</project>
