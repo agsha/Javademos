@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:element name="age" type="xsd:string"/>
+    <xsd:element name="dept" type="xsd:string"/>
+    <xsd:element name="fname" type="xsd:string"/>
+    <xsd:element name="lname" type="xsd:string"/>
+    <xsd:element name="project" type="xsd:string"/>
+    <xsd:element name="name">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="fname"/>
+                <xsd:element ref="lname"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+
+    <xsd:element name="employee">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="name"/>
+                <xsd:element ref="age"/>
+                <xsd:element ref="dept"/>
+                <xsd:element ref="project"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="employees">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="employee"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
