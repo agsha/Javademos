@@ -12,4 +12,14 @@
         <servlet-name>HelloServlet</servlet-name>
         <url-pattern>/helloservlet</url-pattern>
     </servlet-mapping>
+   <servlet>
+   		<servlet-name>MVC Demo</servlet-name>
+   		<servlet-class>servletmvcdemo.Greetings</servlet-class>
+   </servlet>
+   
+   <servlet-mapping>
+   		<servlet-name>MVC Demo</servlet-name>
+   		<url-pattern>/greetings.do</url-pattern>
+   </servlet-mapping>
+   
 </web-app>
