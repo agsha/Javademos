@@ -22,7 +22,7 @@ public class App
                 log.warn("settings.json not found on classpath");
                 s = new Settings();
             }
-            log.info("Using settings:{}", dumps(s));
+            log.info("Using settings:{}", prettifyJson(s));
             obj.go();
         } catch (Exception e) {
             log.error(e);
@@ -34,6 +34,11 @@ public class App
         // required for jackson
         public Settings() {
         }
+
+        @Override
+        public String toString() {
+            return "";
+        }
     }
 
 
@@ -42,7 +47,7 @@ public class App
      */
     private void go() throws Exception {
         log.debug("Hello, world!");
-        cc("ls -la ~ ");
+        new ProcessBuilder("/bin/bash", "-c", "ls -la ~ | grep 'co'").start().waitFor();
     }
 
 }

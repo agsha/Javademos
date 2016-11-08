@@ -3,19 +3,16 @@ package sha;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.util.Map;
-
 import static sha.Utils.*;
 
-public class App 
+public class MyNetty
 {
     private static final Logger log = LogManager.getLogger();
     private static Settings s;
 
     public static void main( String[] args ) {
         try {
-            App obj = new App();
+            MyNetty obj = new MyNetty();
             try {
                 s = readJsonFromClasspath("settings.json", Settings.class);
             } catch (Exception e) {

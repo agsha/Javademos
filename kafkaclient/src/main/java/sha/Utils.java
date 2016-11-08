@@ -18,20 +18,14 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
-import java.io.Serializable;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static java.nio.file.Files.readAllLines;
 
 /**
  * Created by sharath.g on 09/06/15.
@@ -40,6 +34,10 @@ public class Utils {
 
     public static final RandomString rs = new RandomString();
     private static final Logger log = LogManager.getLogger();
+    public static void main(String[] args) {
+        //log.debug("{}", httpPostJson("http://posttestserver.com/post.php", "f u"));
+        //log.debug("{}", httpPostJson("http://httpbin.org/post", "f u"));
+    }
 
     public static Document readXml(String path) {
         DocumentBuilderFactory builderFactory =
@@ -137,15 +135,6 @@ public class Utils {
         }
     }
 
-    public static <T> T loads(String json, Class<T> claz) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.readValue(json, claz);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static <T> T readJson(String path, TypeReference tp) {
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -187,22 +176,6 @@ public class Utils {
         }
     }
 
-    public static String read(String fileName) {
-        try {
-            return new String(Files.readAllBytes(Paths.get(fileName)));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static List<String> readLines(String fileName) {
-        try {
-            return Files.readAllLines(Paths.get(fileName), Charset.defaultCharset());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static String readClasspathFile(String fileName) {
         try {
             return IOUtils.toString(Utils.class.getClassLoader().getResourceAsStream(fileName));
@@ -221,19 +194,11 @@ public class Utils {
         }
     }
 
-    public static void cc(String command) {
-        try {
-            new ProcessBuilder("/bin/bash", "-c", command).start().waitFor();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static String prettifyJson(String json) {
         return prettifyJson(json, new ObjectMapper());
     }
 
-    public static String dumps(Object o) {
+    public static String prettifyJson(Object o) {
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -257,83 +222,37 @@ public class Utils {
     public static String writeJson(Object obj) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+            return mapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
-    public static void l(Object ...o) {
-        String s = "";
-        for(Object oo : o) {
-            if(oo instanceof int[]) {
-                s+=Arrays.toString((int[])oo)+" ";
-                continue;
-            }
-            if(oo instanceof double[]) {
-                s+=Arrays.toString((double[])oo)+" ";
-                continue;
-            }
-            if(oo instanceof boolean[]) {
-                s+=Arrays.toString((boolean[])oo)+" ";
-                continue;
-            }
-            if(oo instanceof char[]) {
-                s+=Arrays.toString((char[])oo)+" ";
-                continue;
-            }
-            if(oo instanceof long[]) {
-                s+= Arrays.toString((long[])oo)+" ";
-                continue;
-            }
-            if(oo instanceof String[]) {
-                s+=Arrays.toString((String[])oo)+" ";
-                continue;
-            }
-            if(oo instanceof Object[]) {
-                s+=Arrays.deepToString((Object[])oo)+" ";
-                continue;
-            }
-            s += (oo.toString())+" ";
-        }
-        System.out.println(s);
-    }
+
     public static class LatencyTimer extends Thread {
         private final String name;
-        private final double intervalNano;
         private LatPrinter printer;
-        private int beginNano;
-        private int buckets;
         // bin i (0 based) holds the count from [1000*(i) nanos, 1000*(i+1)nanos)
         // the last element holds the count from [1000*i to oo)
         public AtomicLong[]bins = new AtomicLong[2000];
-        public AtomicLong maxNanos = new AtomicLong(0);
-        double[] pTiles = new double[]{1, 50, 75, 90, 95, 99, 99.9};
-        AtomicLong total = new AtomicLong(0);
+        int[] pTiles = new int[]{90, 92, 94, 96, 98};
 
 
         public LatencyTimer(String name) {
-            this(new LatDefaultPrinter(), name, 0, 1000_000, 2000);
+            this(new LatDefaultPrinter(), name);
         }
 
 
         public LatencyTimer(Class name) {
-            this(new LatDefaultPrinter(), name.getName(), 0, 1000_000, 2000);
-        }
-        public LatencyTimer(String name, int beginMicro, int endMicro, int buckets) {
-            this(new LatDefaultPrinter(), name, beginMicro, endMicro, buckets);
+            this(new LatDefaultPrinter(), name.getName());
         }
 
         public LatencyTimer(LatPrinter p) {
-            this(p, "noname", 0, 1000_000, 2000);
+            this(p, "noname");
         }
 
-        public LatencyTimer(LatPrinter p, String name, int beginMicro, int endMicro, int buckets) {
+        public LatencyTimer(LatPrinter p, String name) {
             this.name = name;
             this.printer = p;
-            this.beginNano = beginMicro*1000;
-            this.buckets = buckets;
-            this.intervalNano = ( endMicro - beginMicro )*1000.0/buckets;
-            bins = new AtomicLong[buckets];
             for(int i=0; i<bins.length; i++) {
                 bins[i] = new AtomicLong(0);
             }
@@ -345,28 +264,13 @@ public class Utils {
             this.printer = printer;
         }
 
+        AtomicLong total = new AtomicLong(0);
         public void count(long latencyNanos) {
-
-            int bucket = (int)((latencyNanos - beginNano)/intervalNano);
-            bucket = Math.max(0, bucket);
-            bucket = Math.min(bins.length-1, bucket);
-            bins[bucket].incrementAndGet();
-            maxNanos.set(Math.max(maxNanos.get(), latencyNanos));
+            long latencyMicros = Math.min(latencyNanos/1000, bins.length-1);
             total.incrementAndGet();
+            bins[(int)latencyMicros].incrementAndGet();
         }
 
-        public void reset() {
-            for (int i = 0; i < bins.length; i++) {
-                bins[i] = new AtomicLong();
-            }
-            maxNanos = new AtomicLong(0);
-            total = new AtomicLong(0);
-        }
-
-        AtomicBoolean die = new AtomicBoolean(false);
-        public void die(){
-            die.set(true);
-        }
         @Override
         public void run() {
             while(true) {
@@ -374,9 +278,6 @@ public class Utils {
                     sleep(2000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
-                }
-                if(die.get()) {
-                    return;
                 }
                 printer.log(name, snap());
             }
@@ -399,24 +300,21 @@ public class Utils {
                 mybins[i] = bins[i].get();
             }
             long mytotal = total.get();
-            long myMaxNanos = maxNanos.get();
 
-            double[] nanos = new double[pTiles.length];
+            double[] millis = new double[pTiles.length];
 
             int index = 0;
             int cumulative = 0;
-            for(int i=0; i<pTiles.length; i++) {
-                double max = ((mytotal*pTiles[i])/100.0);
-
-                while(index < mybins.length && mybins[index] + cumulative <= max) {
-                    cumulative+=mybins[index];
+            outer:for(int i=0; i<pTiles.length; i++) {
+                long max = ((mytotal*pTiles[i])/100);
+                while(mybins[index] + cumulative <= max) {
                     index++;
+                    if(index>=mybins.length) break outer;
+                    cumulative+=mybins[index];
                 }
-
-                nanos[i] = (index)*intervalNano + beginNano;
+                millis[i] = (index+1)/1000.0;
             }
-            reset();
-            return new LatRet(mytotal, myMaxNanos, nanos, pTiles);
+            return new LatRet(total.get(), millis, pTiles);
         }
 
         public static class LatDefaultPrinter implements LatPrinter {
@@ -426,75 +324,28 @@ public class Utils {
             }
         }
 
-
-        public static class LatRet implements Serializable {
-            public double[] nanos;
-            public double[] pTiles;
+        public static class LatRet {
+            public double[] millis;
+            public int[] pTiles;
             public long total;
-            public long maxNanos;
-            public long snapTimeMillis;
 
             @Override
             public String toString() {
-                if(total==0) {
-                    return "No data points";
-                }
+                String s = "total:"+total+" ";
                 DecimalFormat df = new DecimalFormat("#.0000");
-                String s = "samples:"+total+" max:"+timeFormat(maxNanos, df);
-                for(int i = 0; i< nanos.length; i++) {
-                    s+=pTiles[i]+"%: < "+timeFormat(nanos[i], df);
+                for(int i=0; i<millis.length; i++) {
+                    s+=pTiles[i]+"%: < "+df.format(millis[i])+"ms ";
                 }
                 return "Latencies: "+s;
             }
 
-            public static String timeFormat(double t, DecimalFormat df) {
-                if(t<1000) {
-                    return df.format(t)+" nanos ";
-                } else if (t<1000_000) {
-                    return df.format(t/1000)+" micros ";
-                } else {
-                    return df.format(t/1000_000)+" ms ";
-                }
-            }
-            //for objectmapper
-            public LatRet(){}
-            public LatRet(long total, long maxNanos, double[] nanos, double[] pTiles) {
-                this.nanos = nanos;
+            public LatRet(long total, double[] millis, int[] pTiles) {
+                this.millis = millis;
                 this.pTiles = pTiles;
                 this.total = total;
-                this.maxNanos = maxNanos;
-                this.snapTimeMillis = System.currentTimeMillis();
             }
         }
     }
-    public static void main(String[] args) throws InterruptedException {
-        //log.debug("{}", httpPostJson("http://posttestserver.com/post.php", "f u"));
-        //log.debug("{}", httpPostJson("http://httpbin.org/post", "f u"));
-        Utils u = new Utils();
-        u.go();
-    }
-
-    private void go() throws InterruptedException {
-//        LatencyTimer lt1 = new LatencyTimer(new LatencyTimer.LatPrinter() {
-//            @Override
-//            public void log(String name, LatencyTimer.LatRet ret) {
-//
-//            }
-//        }, "nullPrinter", 0, 1, 2000);
-//        LatencyTimer pop = new LatencyTimer("pop", 0, 200, 2000);
-//        while(true) {
-//            long now = System.nanoTime();
-//            for (int i = 0; i < 1000; i++) {
-//                lt1.count(100000);
-//            }
-//            pop.count(System.nanoTime()-now);
-//
-//        }
-        DecimalFormat df = new DecimalFormat("#.0000");
-        log.debug("hi {}", LatencyTimer.LatRet.timeFormat(1029*1000, df));
-
-    }
-
     public static class Timer extends Thread {
 
         private String name;
@@ -508,7 +359,7 @@ public class Utils {
             lastSnapshotTime = beginTime = System.nanoTime();
             opsSinceLastSnapshot.set(0);
             opsSoFar.set(0);
-//            log.debug("======resetting timer====");
+            log.debug("======resetting timer====");
         }
 
         public Timer(String name) {
@@ -535,10 +386,6 @@ public class Utils {
         public void setPrinter(Printer printer) {
             this.printer = printer;
         }
-        AtomicBoolean die = new AtomicBoolean(false);
-        public void die(){
-            die.set(true);
-        }
 
         @Override
         public void run() {
@@ -552,9 +399,6 @@ public class Utils {
                 }
                 if(enabled.get()) doLog();
                 if(interrupted()) break;
-                if(die.get()) {
-                    break;
-                }
             }
         }
 
@@ -589,7 +433,7 @@ public class Utils {
             return new Ret((long)qps, (long)totalqps, ops, opsSoFar.get());
         }
 
-        public static class Ret implements Serializable {
+        public static class Ret {
             public long qps, totalQps, ops, totalOps;
 
             public Ret(long qps, long totalQps, long ops, long totalOps) {
@@ -602,25 +446,11 @@ public class Utils {
             @Override
             public String toString() {
                 return "Ret{" +
-                        "qps=" + format(qps) +
-                        ", totalQps=" + format(totalQps) +
-                        ", ops=" + format(ops) +
-                        ", totalOps=" + format(totalOps) +
+                        "qps=" + qps +
+                        ", totalQps=" + totalQps +
+                        ", ops=" + ops +
+                        ", totalOps=" + totalOps +
                         '}';
-            }
-
-            String format(long x) {
-                String s = ""+x;
-                StringBuilder ss = new StringBuilder();
-                for (int i = 0; i <s.length() ; i++) {
-                    if(i%3==0 && i>0) {
-                        ss.append("_");
-                    }
-                    ss.append(s.charAt(s.length()-i-1));
-
-                }
-//                return ss.reverse().toString();
-                return ss.reverse().toString();
             }
         }
 

@@ -1,21 +1,19 @@
-package sha;
+package sha1;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.util.Map;
-
+import static com.sun.tools.doclint.Entity.ne;
 import static sha.Utils.*;
 
-public class App 
+public class Driver
 {
     private static final Logger log = LogManager.getLogger();
     private static Settings s;
 
     public static void main( String[] args ) {
         try {
-            App obj = new App();
+            Driver obj = new Driver();
             try {
                 s = readJsonFromClasspath("settings.json", Settings.class);
             } catch (Exception e) {
@@ -41,8 +39,18 @@ public class App
      * All teh code from here:
      */
     private void go() throws Exception {
-        log.debug("Hello, world!");
-        cc("ls -la ~ ");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    new Server().go();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        Thread.sleep(5);
+        new Client().go();
     }
 
 }

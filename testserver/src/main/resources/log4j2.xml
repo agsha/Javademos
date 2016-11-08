@@ -30,6 +30,5 @@
         </Root>
 
         <Logger name="sha" level="all"/>
-        <Logger name="sha1" level="all"/>
     </Loggers>
 </Configuration>
