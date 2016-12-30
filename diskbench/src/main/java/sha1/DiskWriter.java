@@ -1,21 +1,21 @@
-package sha;
+package sha1;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.util.Map;
+import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 import static sha.Utils.*;
 
-public class App 
+public class DiskWriter
 {
     private static final Logger log = LogManager.getLogger();
     private static Settings s;
 
     public static void main( String[] args ) {
         try {
-            App obj = new App();
+            DiskWriter obj = new DiskWriter();
             try {
                 s = readJsonFromClasspath("settings.json", Settings.class);
             } catch (Exception e) {
@@ -25,7 +25,7 @@ public class App
             log.info("Using settings:{}", dumps(s));
             obj.go();
         } catch (Exception e) {
-            log.error("", e);
+            log.error(e);
         }
     }
 
@@ -40,34 +40,23 @@ public class App
     /**
      * All teh code from here:
      */
-    private void go() throws Exception {
-        log.debug("Hello, world!");
-        Timer t = new Timer("yo");
-        LatencyTimer lt = new LatencyTimer("asdf");
+    public void go() throws Exception {
+        Timer diskBytes = new Timer("diskBytes");
+        LatencyTimer diskWrLat = new LatencyTimer("diskWrLat");
+        RandomAccessFile file = new RandomAccessFile("/grid/vdb/diskbench/logfile", "rw");
         long now = System.nanoTime();
         while(true) {
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            long tt = System.nanoTime();
-            lt.count(tt-now);
-            now = tt;
+            byte[] b = new byte[16*1024];
+            Arrays.fill(b, (byte)(-1));
+            file.write(b);
+            long xx = System.nanoTime();
+            diskWrLat.count(xx-now);
+            now = xx;
+            diskBytes.count(b.length);
 
+//            if(file.length() > 1024*1024*1024) {
+//                file.setLength(0);
+//            }
         }
     }
 

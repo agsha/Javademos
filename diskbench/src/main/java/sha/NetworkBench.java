@@ -167,7 +167,7 @@ public class NetworkBench
     }
 //    private static final int size = 1024;
     public static class ClientState {
-    LatencyTimer lt = new LatencyTimer("endToEnd", 0, 20_000, 2000);
+    LatencyTimer lt = new LatencyTimer("endToEnd");
     Utils.Timer tp = new Utils.Timer("clientThrougput");
 
 
@@ -244,10 +244,10 @@ public class NetworkBench
         public Server() {
 
             try {
-                dataTx = new Utils.LatencyTimer("dataTx", 0, 1000, 2000);
-                qTime = new Utils.LatencyTimer("qTime", 0, 100, 2000);
-                sendTimer = new Utils.LatencyTimer("sendTime", 0, 20_000, 2000);
-                firstByteTime = new Utils.LatencyTimer("firstByteTime", 0, 20_000, 2000);
+                dataTx = new Utils.LatencyTimer("dataTx");
+                qTime = new Utils.LatencyTimer("qTime");
+                sendTimer = new Utils.LatencyTimer("sendTime");
+                firstByteTime = new Utils.LatencyTimer("firstByteTime");
 
                 ssc = ServerSocketChannel.open();
                 ssc.configureBlocking(false);

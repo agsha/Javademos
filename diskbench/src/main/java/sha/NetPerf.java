@@ -285,7 +285,7 @@ public class NetPerf
                     reading.latRet.add(ret);
                     log.debug("name:{}, {}",name, ret);
                 }
-            }, "endToEnd", 0, 20_000, 2000);
+            }, "endToEnd");
             lt.die();
             try {
                 throwingRun();
@@ -511,10 +511,10 @@ public class NetPerf
                     log.debug("name:{}, {}",name, ret);
                 }
             }
-            dataTx = new LatencyTimer(new Recorder(serverReading.dataTx), "dataTx", 0, 1000, 2000);
-            qTime = new LatencyTimer(new Recorder(serverReading.qTime), "qTime", 0, 100, 2000);
-            sendTimer = new LatencyTimer(new Recorder(serverReading.sendTimer), "sendTime", 0, 20_000, 2000);
-            firstByteTime = new LatencyTimer(new Recorder(serverReading.firstByteTime), "firstByteTime", 0, 20_000, 2000);
+            dataTx = new LatencyTimer(new Recorder(serverReading.dataTx), "dataTx");
+            qTime = new LatencyTimer(new Recorder(serverReading.qTime), "qTime");
+            sendTimer = new LatencyTimer(new Recorder(serverReading.sendTimer), "sendTime");
+            firstByteTime = new LatencyTimer(new Recorder(serverReading.firstByteTime), "firstByteTime");
             dataTx.die(); qTime.die(); sendTimer.die();firstByteTime.die();
             serverThroughput = new Utils.Timer(new Utils.Timer.Printer() {
                 @Override

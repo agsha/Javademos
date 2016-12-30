@@ -5,14 +5,12 @@ import org.apache.logging.log4j.Logger;
 import sha.Utils;
 
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Set;
 
-import static sha.NetPerf.serverIp;
 import static sha.Utils.dumps;
 import static sha.Utils.readJsonFromClasspath;
 
@@ -49,8 +47,8 @@ public class Client
      * All teh code from here:
      */
     public void go() throws Exception {
-        ByteBuffer data = ByteBuffer.allocateDirect(1024*16);
-        ByteBuffer ack = ByteBuffer.allocateDirect(1);
+        ByteBuffer data = ByteBuffer.allocate(64);
+        ByteBuffer ack = ByteBuffer.allocate(64);
         Utils.Timer clientTimer = new Utils.Timer("clientTimer");
         clientTimer.die();
 
@@ -58,7 +56,7 @@ public class Client
 //        clientAck.die();
         long pending = 0;
 
-        Utils.LatencyTimer clientEndToEnd = new Utils.LatencyTimer("clientE2E", 0, 100, 2000);
+        Utils.LatencyTimer clientEndToEnd = new Utils.LatencyTimer("clientE2E");
 
 
 
@@ -69,43 +67,61 @@ public class Client
         SocketChannel sc = SocketChannel.open();
         sc.configureBlocking(false);
         sc.register(selector, SelectionKey.OP_CONNECT|SelectionKey.OP_WRITE|SelectionKey.OP_READ);
-        sc.connect(new InetSocketAddress("127.0.0.1", 8081));
+        sc.connect(new InetSocketAddress("localhost", 8081));
+//        sc.connect(new InetSocketAddress("10.33.57.199", 8081));
         long timestamp = Long.MAX_VALUE;
-
+//        Utils.LatencyTimer t6 = new Utils.LatencyTimer("t6", 0, 50, 2000);
+//        Utils.LatencyTimer t8 = new Utils.LatencyTimer("t8", 0, 50, 2000);
+        long now = System.nanoTime();
         while(true) {
-            selector.select();
+            int rr = selector.select();
+            if(rr==0) continue;
             Set<SelectionKey> selectionKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iterator = selectionKeys.iterator();
-            while (iterator.hasNext()) {
 
+            Iterator<SelectionKey> iterator = selectionKeys.iterator();
+
+            while (iterator.hasNext()) {
                 SelectionKey key = iterator.next();
+
                 SocketChannel channel = (SocketChannel)key.channel();
+
                 if(key.isValid() && key.isConnectable()) {
                     channel.finishConnect();
                     log.debug("finished connect");
 //                    channel.setOption(StandardSocketOptions.SO_SNDBUF, clientSend);
-                        channel.socket().setTcpNoDelay(true);
-
+//                    channel.setOption(StandardSocketOptions.SO_RCVBUF, 1024*1024*16);
+//                        channel.socket().setTcpNoDelay(true);
                 }
+
                 if(key.isValid() && key.isReadable()) {
-                    int ret = channel.read(ack);
-                    if(ret > 0) {
+
+                    channel.read(ack);
+
+                    if(ack.remaining()==0) {
+                        clientEndToEnd.count(System.nanoTime()-ack.getLong(0));
+
                         ack.clear();
                         clientAck.count();
                         pending--;
-                        clientEndToEnd.count(System.nanoTime()-timestamp);
 
                     }
                 }
-                if(pending ==0 && key.isValid() && key.isWritable()) {
+
+                if( pending < Driver.pending && key.isValid() && key.isWritable()) {
+
+//                    now = System.nanoTime();
+                    int ret = channel.write(data);
+//                    t8.count(System.nanoTime()-now);
+
                     if(data.remaining()==0) {
                         data.clear();
                         pending++;
-                        timestamp = System.nanoTime();
+                        clientTimer.count();
+                        data.putLong(0, System.nanoTime());
                     }
-                    int ret = channel.write(data);
-                    clientTimer.count(ret);
+
                 }
+                int sum = 0;
                 iterator.remove();
 
             }

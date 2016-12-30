@@ -1,0 +1,50 @@
+{
+  "title": "todo",
+  "description": "todo",
+  "code": "todo",
+  "rawData": "",
+  "charts": [
+    {
+      "description": "todo",
+      "highchart": {
+        "chart": {
+          "zoomType": "x"
+        },
+        "title": {
+          "text": ""
+        },
+        "xAxis": {
+          "categories": "",
+          "crosshair": true,
+          "title": {
+            "text": "<placeholder>"
+          }
+        },
+        "yAxis": {
+          "title": {
+            "text": "<placeholder>"
+          },
+          "format": "{value:,.0f}"
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "layout": "horizontal",
+          "align": "left"
+        },
+        "series": [
+          {
+            "name": "<placeholder>",
+            "type": "line",
+            "data": [
+              "<placeholder>"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
