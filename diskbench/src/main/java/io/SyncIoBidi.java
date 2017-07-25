@@ -2,14 +2,20 @@ package io;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sha.Recorder;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
+
 import static sha.Utils.*;
 
 public class SyncIoBidi
@@ -44,9 +50,48 @@ public class SyncIoBidi
     /**
      * All teh code from here:
      */
+    Recorder recorder = new Recorder(SyncIo.class.getSimpleName());
+    Timer trpt = new Timer(recorder, "serverTrpt");
+    //    AtomicInteger pending = new AtomicInteger(0);
+    LatencyTimer lt = new LatencyTimer(recorder, "serverLat");
+    CyclicBarrier barrier;
     public void go() throws Exception {
+        int cpus = Runtime.getRuntime().availableProcessors() / 2 ; // because we will be launching in pairs
+        List<Integer> threads = new ArrayList<>();
+        for(int i=1; i<=cpus; i++) {
+            threads.add(i);
+        }
+        for(int i=2*cpus; i<=2048; i*=2) {
+            threads.add(i);
+        }
+        int count = 0;
+        outer:for (Integer thread : threads) {
+            for(long size=64; size<=1024*1024; size*=2) {
+                for(long pending=1; pending<=1024*1024; pending*=4) {
+
+                    if(thread*size > 1024*1024*1024) {
+                        continue;
+                    }
+                    System.out.println();
+                    System.out.println();
+                    System.out.println("starting new run for thread="+thread+" size="+size);
+                    recorder.startRun(new MyRun(thread, (int)size, pending));
+                    oneTest(thread, (int)size, pending);
+                    count++;
+                    recorder.finish();
+
+//                if(count==2) {
+//                    break outer;
+//                }
+                }
+            }
+        }
+
+    }
+
+
+    public void oneTest(int pairs, final int size, final long pending) throws Exception {
         final int port = 10081;
-        int pairs = 10;
 
         for (int i=0; i<pairs; i++) {
             final int finalI = i;
@@ -54,7 +99,7 @@ public class SyncIoBidi
                 @Override
                 public void run() {
                     try {
-                        goServer(port+ finalI);
+                        goServer(port+ finalI, size);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -68,7 +113,7 @@ public class SyncIoBidi
                 @Override
                 public void run() {
                     try {
-                        goClientWriter(port+ finalI);
+                        goClientWriter(port+ finalI, size, pending);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -78,49 +123,44 @@ public class SyncIoBidi
     }
 
 
-    final Timer trpt = new Timer("trpt");
-    final LatencyTimer lt = new LatencyTimer("lt");
-    private void goServer(int port) throws Exception {
+    private void goServer(int port, final int size) throws Exception {
         ServerSocketChannel ssc = ServerSocketChannel.open();
         ssc.bind(new InetSocketAddress("localhost", port));
         final SocketChannel socketChannel = ssc.accept();
-        final ArrayBlockingQueue<Long> abq = new ArrayBlockingQueue<>(10);
+        final ConcurrentLinkedQueue<Long> abq = new ConcurrentLinkedQueue<>();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ByteBuffer sb = ByteBuffer.allocate(64);
+                ByteBuffer sb = ByteBuffer.allocate(size);
                 while (true) {
                     try {
                         sb.clear();
-                        sb.putLong(0, abq.take());
+//                        sb.putLong(0, abq.take());
                         while(sb.remaining()>0) {
                             socketChannel.write(sb);
                         }
 
-                    } catch (IOException | InterruptedException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         }).start();
-        ByteBuffer bf = ByteBuffer.allocate(64);
-
-
-        long now = System.nanoTime();
+        ByteBuffer bf = ByteBuffer.allocate(size);
         while(true) {
             while(bf.remaining() > 0) {
                 int ret = socketChannel.read(bf);
             }
             bf.clear();
             Long x = bf.getLong(0);
-            abq.put(x);
+//            abq.put(x);
         }
     }
 
-    private void goClientWriter(int port) throws Exception {
+    private void goClientWriter(int i, int port, long pend) throws Exception {
         ByteBuffer bf = ByteBuffer.allocate(64);
-        final Semaphore pending = new Semaphore(100000000);
+        final Semaphore pending = new Semaphore((int)pend);
         final SocketChannel socketChannel = SocketChannel.open();
         log.debug("connected");
         socketChannel.connect(new InetSocketAddress("localhost", port));
@@ -153,4 +193,21 @@ public class SyncIoBidi
             bf.putLong(0, System.nanoTime());
         }
     }
+
+    public static class MyRun implements Serializable {
+        public int threads = 0;
+        public int size = 0;
+        public long pending = 0;
+
+        public MyRun(int threads, int size, long pending) {
+            this.threads = threads;
+            this.size = size;
+            this.pending = pending;
+        }
+
+        // for objectmapper
+        public MyRun() {
+        }
+    }
+
 }

@@ -69,7 +69,7 @@ public class SharedSynchronized
 
 
             List<Thread> ts = new ArrayList<>(threads);
-            hs.startRun(threads);
+//            hs.startRun(threads);
             for(int i=0; i<threads; i++) {
                 Runner r = new Runner();
                 runners.add(r);

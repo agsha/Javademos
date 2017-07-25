@@ -114,14 +114,14 @@ public class NetPerf
         public List<LatencyTimer.LatRet> latRet = new ArrayList<>();
 
     }
-    public interface ServerRmi extends Remote {
+    private interface ServerRmi extends Remote {
         public void prepare(int bf, int clientSend, boolean waitPending) throws RemoteException;
 
         ServerReading snap() throws RemoteException;
 
         void shutdown() throws RemoteException;
     }
-    public interface ClientRmi extends Remote {
+    private interface ClientRmi extends Remote {
         public ClientReading prepare(int bf, int clientSend, boolean waitPending) throws RemoteException;
     }
     public static class ServerRmiImpl extends UnicastRemoteObject implements  ServerRmi {

@@ -1,27 +1,29 @@
 package sha;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by sharath.g on 12/21/16.
  */
-public  class Recorder extends Utils.Timer.DefaultPrinter {
+public  class Recorder implements Utils.Timer.Printer, Utils.LatencyTimer.LatPrinter {
+    private static final Logger log = LogManager.getLogger();
+
     String file;
-    List<Run> runs = new ArrayList<>();
-    Run currentRun;
+    List<Holder> holders = new ArrayList<>();
+    Holder current;
     ObjectMapper mapper = new ObjectMapper();
+    Utils.Timer.DefaultPrinter dp = new Utils.Timer.DefaultPrinter();
+    Utils.LatencyTimer.LatDefaultPrinter ldp = new Utils.LatencyTimer.LatDefaultPrinter();
 
     public Recorder(String simpleName) {
         file = Paths.get(System.getProperty("user.home"), simpleName).toString();
@@ -29,93 +31,36 @@ public  class Recorder extends Utils.Timer.DefaultPrinter {
 
     @Override
     public synchronized void log(String name, Utils.Timer.Ret ret) {
-        currentRun.list.add(ret);
-        super.log(name, ret);
+        if(ret.qps  > 100) {
+            current.list.add(ret);
+        }
+        dp.log(name, ret);
     }
 
-    public synchronized void startRun(Run run) {
-        currentRun = run;
-        runs.add(currentRun);
+    @Override
+    public synchronized void log(String name, Utils.LatencyTimer.LatRet ret) {
+        current.latencyList.add(ret);
+        ldp.log(name, ret);
     }
 
-    public synchronized void finishLite() {
+    public synchronized void startRun(Object object) {
+        current = new Holder(object);
+        holders.add(current);
+    }
+
+    public synchronized void finish() {
         try {
-            JsonNode root;
-            root = mapper.readTree(ClassLoader.getSystemResourceAsStream("chart.json"));
-            ((ObjectNode)root).put("title", "Threads trying to increment a threadlocal integer");
-            ((ObjectNode)root).put("description", "Threads trying to increment a threadlocal integer number of cpus = "+Runtime.getRuntime().availableProcessors());
-            ((ObjectNode)root).set("rawData", mapper.valueToTree(runs));
+            JsonNode root = mapper.createObjectNode();
+            ((ObjectNode)root).put("title", "Multithreaded cache effects");
+            ((ObjectNode)root).put("description", "Multithreaded cache effects  number of cpus = "+Runtime.getRuntime().availableProcessors());
+            ((ObjectNode)root).set("rawData", mapper.valueToTree(holders));
             Files.write(Paths.get(file), mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root).getBytes());
-
-
-
-            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
+            System.out.println("finished dumping all data");
+//            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public synchronized void  finish() {
-        try {
-            JsonNode root;
-            root = mapper.readTree(ClassLoader.getSystemResourceAsStream("chart.json"));
-            ((ObjectNode)root).put("title", "Threads trying to increment a threadlocal integer");
-            ((ObjectNode)root).put("description", "Threads trying to increment a threadlocal integer number of cpus = "+Runtime.getRuntime().availableProcessors());
-            ((ObjectNode)root).set("rawData", mapper.valueToTree(runs));
-            ArrayNode charts = (ArrayNode) root.path("charts");
-
-
-
-            ArrayNode labels = mapper.createArrayNode();
-            ((ObjectNode)charts.path(0).path("highchart").path("title")).put("text", "Threads trying to increment a variable");
-            ((ObjectNode)charts.path(0).path("highchart").path("xAxis")).set("categories", labels);
-            ((ObjectNode)charts.path(0).path("highchart").path("xAxis").path("title")).put("text", "number of threads");
-            ((ObjectNode)charts.path(0).path("highchart").path("yAxis").path("title")).put("text", "total number of increments across all threads");
-
-            for (Run run : runs) {
-                labels.add(run.threads);
-            }
-
-
-            ArrayNode seriesArray = (ArrayNode)charts.path(0).path("highchart").path("series");
-            ObjectNode seriesObjTemplate = (ObjectNode)seriesArray.path(0);
-            seriesArray.removeAll();
-
-            ObjectNode seriesObj = seriesObjTemplate.deepCopy();
-            seriesObj.put("name", "");
-            seriesArray.add(seriesObj);
-
-            ArrayNode data = (ArrayNode)seriesObj.get("data");
-            data.removeAll();
-
-
-            // add the series data
-            for (int r=0; r<runs.size(); r++) {
-                Run run = runs.get(r);
-                int n = run.list.size();
-                int f = n-4; f = bound(f, 0, n-1);
-                int l = n-2; l = bound(l, 0, n-1);
-                long sum = 0;
-                for(int i=f; i<=l; i++) {
-                    sum += run.list.get(i).qps;
-                }
-                double val = sum/(l-f+1);
-                data.add(val);
-
-            }
-
-            Files.write(Paths.get(file), mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root).getBytes());
-
-
-
-            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
-
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     public static int bound(int n, int min, int max) {
@@ -126,24 +71,16 @@ public  class Recorder extends Utils.Timer.DefaultPrinter {
     public static void main(String[] args) throws IOException {
         Recorder hc = new Recorder(Recorder.class.getSimpleName());
         JsonNode n = hc.mapper.readTree(Files.readAllBytes(Paths.get(hc.file))).get("rawData");
-        String s = hc.mapper.writeValueAsString(n);
-        hc.runs = hc.mapper.readValue(s, new TypeReference<List<Run>>() {
-        });
-
-
-        hc.finish();
     }
 
-    public static class Run implements Serializable {
-        public int threads;
-        public List<Utils.Timer.Ret> list = Collections.synchronizedList(new ArrayList<Utils.Timer.Ret>());
 
-        public Run(int threads) {
-            this.threads = threads;
-        }
+    public static class Holder {
+        public final Object params;
+        public final List<Utils.Timer.Ret> list = new ArrayList<>();
+        public final List<Utils.LatencyTimer.LatRet> latencyList = new ArrayList<>();
 
-        public Run() {
+        public Holder(Object params) {
+            this.params = params;
         }
     }
-
 }

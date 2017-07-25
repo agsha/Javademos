@@ -326,6 +326,12 @@ public class Utils {
         public LatencyTimer(LatPrinter p, String name) {
             this.name = name;
             this.printer = p;
+            pTiles = new double[100];
+            for(int i=0; i<100; i++) {
+                pTiles[i] = i+1;
+            }
+            pTiles[99] = 99.9;
+
             reset();
             setDaemon(true);
             start();

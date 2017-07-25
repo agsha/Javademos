@@ -54,7 +54,7 @@ public class MemoryTest
      * All teh code from here:
      */
     private void work() throws Exception {
-        int[] x = new int[1024*1024*64];
+        int[] x = new int[64];
         Random r = new Random();
         for(int i=0; i<x.length; i++){
             x[i] = r.nextInt(x.length);

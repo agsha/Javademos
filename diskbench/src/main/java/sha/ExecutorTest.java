@@ -42,8 +42,8 @@ public class ExecutorTest
     private void go() throws Exception {
 //        sha.die();
 //        lt.die();
-        int n = 1000;
-        final ArrayBlockingQueue<Wrap> abq = new ArrayBlockingQueue<>(1);
+        int n = 1;
+        final ArrayBlockingQueue<Wrap> abq = new ArrayBlockingQueue<>(1000);
         for (int i = 0; i < n; i++) {
             new Thread(new Runnable() {
                 @Override
@@ -60,18 +60,24 @@ public class ExecutorTest
                 }
             }).start();
         }
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 1; i++) {
             new Thread(new Runnable() {
 //                long last = System.nanoTime();
 
                 @Override
                 public void run() {
                     int count = 0;
+                    long mask = (1<<12) - 1;
+                    System.out.println(Long.toBinaryString(mask));
                     Thread.currentThread().setName("taker");
                     while(true) {
                         try {
+                            count++;
                             abq.put(wrap);
-                            sha.count();
+                            if((count & mask)==0) {
+
+                                sha.count(mask);
+                            }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

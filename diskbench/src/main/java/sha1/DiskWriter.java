@@ -43,10 +43,10 @@ public class DiskWriter
     public void go() throws Exception {
         Timer diskBytes = new Timer("diskBytes");
         LatencyTimer diskWrLat = new LatencyTimer("diskWrLat");
-        RandomAccessFile file = new RandomAccessFile("/grid/vdb/diskbench/logfile", "rw");
+        RandomAccessFile file = new RandomAccessFile("/grid/2/test", "rw");
         long now = System.nanoTime();
+        byte[] b = new byte[32*1024*1024];
         while(true) {
-            byte[] b = new byte[16*1024];
             Arrays.fill(b, (byte)(-1));
             file.write(b);
             long xx = System.nanoTime();

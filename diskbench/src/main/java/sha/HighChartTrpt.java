@@ -33,8 +33,8 @@ public  class HighChartTrpt extends Utils.Timer.DefaultPrinter {
         super.log(name, ret);
     }
 
-    public synchronized void startRun(int threads) {
-        currentRun = new Run(threads);
+    public synchronized void startRun(int threads, int workingSet) {
+        currentRun = new Run(threads, workingSet);
         runs.add(currentRun);
     }
 
@@ -47,9 +47,9 @@ public  class HighChartTrpt extends Utils.Timer.DefaultPrinter {
             ((ObjectNode)root).set("rawData", mapper.valueToTree(runs));
             Files.write(Paths.get(file), mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root).getBytes());
 
+            System.out.println("finished dumping contents to file");
 
-
-            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
+//            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -136,10 +136,12 @@ public  class HighChartTrpt extends Utils.Timer.DefaultPrinter {
 
     public static class Run implements Serializable {
         public int threads;
+        public int workingSet;
         public List<Utils.Timer.Ret> list = Collections.synchronizedList(new ArrayList<Utils.Timer.Ret>());
 
-        public Run(int threads) {
+        public Run(int threads, int workingSet) {
             this.threads = threads;
+            this.workingSet = workingSet;
         }
 
         public Run() {

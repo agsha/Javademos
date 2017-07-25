@@ -3,7 +3,7 @@
     <Appenders>
         <Console name="CONSOLE" target="SYSTEM_OUT" >
             <!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %l - %msg%n" />-->
-            <PatternLayout pattern="%c %l - %msg%n" />
+            <!--<PatternLayout pattern="%c %l - %msg%n" />-->
         </Console>
         <Console name="utilsAppender" target="SYSTEM_OUT" >
             <!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %l - %msg%n" />-->
@@ -13,30 +13,21 @@
         <!--<Socket name="socket" host="localhost" port="4445">-->
         <!--<SerializedLayout />-->
         <!--</Socket>-->
-        <!--<RollingFile name="RollingFile" fileName="app.log"-->
-                     <!--filePattern="app-%i.log">-->
-            <!--<PatternLayout>-->
-                <!--<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>-->
-            <!--</PatternLayout>-->
-            <!--<Policies>-->
-                <!--<SizeBasedTriggeringPolicy size="1 MB"/>-->
-            <!--</Policies>-->
-            <!--<DefaultRolloverStrategy max="5"/>-->
-        <!--</RollingFile>-->
-        <!--<File name="MyFile" fileName="app.log" append="false" >-->
-            <!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %l - %msg%n" />-->
-        <!--</File>-->
-
+        <RollingFile name="RollingFile" fileName="logging.log"
+                     filePattern="app-%i.log" bufferedIO="true" bufferSize="1024000" immediateFlush="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 GB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
     </Appenders>
     <Loggers>
         <Root level="error">
-            <AppenderRef ref="CONSOLE" />
-            <!--<AppenderRef ref="MyFile" />-->
+            <!--<AppenderRef ref="CONSOLE" />-->
+            <AppenderRef ref="RollingFile" />
         </Root>
 
         <Logger name="sha" level="all"/>
-        <Logger name="sha.Utils" level="all" additivity="false">
-            <AppenderRef ref="utilsAppender" />
-        </Logger>
     </Loggers>
 </Configuration>
