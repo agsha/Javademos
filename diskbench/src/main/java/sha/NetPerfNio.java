@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -36,17 +37,30 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
 {
     private static final Logger log = LogManager.getLogger();
 
+    public NetPerfNio() throws UnknownHostException {
+    }
+
 
     public static void main( String[] args ) throws Exception{
-//        NetPerfNio obj = new NetPerfNio();
-//        obj.genTestCase();
-        doTest();
+        NetPerfNio obj = new NetPerfNio();
+//        obj.test();
+//        obj.go(args);
+        obj.genTestCase();
+//        doTest();
+
+    }
+
+
+    private void test() throws Exception {
+//        ClientRmi clientRmi = (ClientRmi) LocateRegistry.getRegistry("10.32.10.252", 5002).lookup("ClientRmi");
+//        log.debug("{}", clientRmi.clientResult());
+
     }
 
     static void doTest() throws Exception {
         new Thread(() -> {
-            NetPerfNio server = new NetPerfNio();
             try {
+                NetPerfNio server = new NetPerfNio();
                 server.go("type server time 10 serverReal 127.0.0.1:8000".split("\\s+"));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -55,30 +69,31 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
         Thread.sleep(1000);
 
 
-        new Thread(() -> {
-            try {
-                NetPerfNio client1 = new NetPerfNio();
-                client1.go("type client serverReal 127.0.0.1:8000 clientRmiPort 5002".split("\\s+"));
+        int clients = 2;
+        String a = "";
 
-            } catch (Exception e) {
-                e.printStackTrace();
+        for(int i=0; i<clients; i++) {
+            int finalI = i;
+            a+="127.0.0.1:"+(i+5002);
+            if(i<clients-1) {
+                a+=",";
             }
-        }).start();
+            new Thread(() -> {
+                try {
+                    NetPerfNio client1 = new NetPerfNio();
+                    client1.go(String.format("type client serverReal 127.0.0.1:8000 clientRmiPort %d", (finalI +5002)).split("\\s+"));
 
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+        log.debug("{}", a);
 
-        new Thread(() -> {
-            try {
-                NetPerfNio client2 = new NetPerfNio();
-                client2.go("type client serverReal 127.0.0.1:8000 clientRmiPort 5003".split("\\s+"));
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
         Thread.sleep(1000);
 
         NetPerfNio gateway = new NetPerfNio();
-        gateway.go("type gateway serverRmi 127.0.0.1:5001 clientRmis 127.0.0.1:5002,127.0.0.1:5003".split("\\s+"));
+        gateway.go(String.format("type gateway serverRmi 127.0.0.1:5001 clientRmis %s", a).split("\\s+"));
 
     }
 
@@ -98,11 +113,11 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
     private IpPort[] clientRmis;
     private long timeMs = 10000;
     private int gatewayRmiPort = 5000, serverRmiPort = 5001, clientRmiPort = 5002;
-
+    private String ipAddr = Inet4Address.getLocalHost().getHostAddress();
 
     public void go(String[] args) throws Exception {
         if (args.length==0) {
-            throw new RuntimeException("Usage: java NetPerfNio type <client|gateway|server> clientRmis <ip:port>[,<ip:port>] serverRmi <ip:port> serverReal <ip:port> time <secs[default=10]> gatewayRmiPort <default:5000> serverRmiPort <default:5001> clientRmiPort<default:5002>");
+            throw new RuntimeException("Usage: java NetPerfNio type <client|gateway|server> clientRmis <ip:port>[,<ip:port>] serverRmi <ip:port> serverReal <ip:port> time <secs[default=10]> gatewayRmiPort <default:5000> serverRmiPort <default:5001> clientRmiPort<default:5002> ipAddr <ipaddress for rmi <optional)");
         }
         int argIndex = 0;
         while(argIndex < args.length) {
@@ -131,13 +146,17 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             } else if(arg.equals("clientRmiPort")) {
                 clientRmiPort = Integer.parseInt(args[++argIndex]);
                 argIndex++;
+            } else if(arg.equals("ipAddr")) {
+                ipAddr = (args[++argIndex]);
+                argIndex++;
             } else {
                 throw new RuntimeException("unknown arg: "+args[argIndex] );
             }
         }
 
 
-        System.setProperty("java.rmi.server.hostname", Inet4Address.getLocalHost().getHostAddress());
+        System.setProperty("java.rmi.server.hostname", ipAddr);
+
         if(type.equals("server")) {
             server();
         } else if(type.equals("client")) {
@@ -209,10 +228,17 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             }
 
 
-            log.info("all clients returned");
 
             String result = server.serverResult(testcase);
-            ((ObjectNode) n).setAll(m.readValue(result, ObjectNode.class));
+            log.info("all clients returned");
+            node.setAll(m.readValue(result, ObjectNode.class));
+            ArrayNode arn = m.createArrayNode();
+            for (ClientRmi rmi : clientRmiStubs) {
+                String r = rmi.clientResult();
+                arn.add(r);
+            }
+            node.set("clientRtts", arn);
+
             Files.write(p, m.writerWithDefaultPrettyPrinter().writeValueAsString(root).getBytes());
 
             // just cool down for two seconds
@@ -234,7 +260,7 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
     }
 
     private volatile List<ThrowingThread> clientThreads;
-
+    private volatile List<ClientState> clientStates;
     @Override
     public void clientInit(String testcaseJson) throws RemoteException {
         ObjectMapper m = new ObjectMapper();
@@ -247,43 +273,111 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
 
         int connections = node.get("connectionsPerClient").asInt();
         clientThreads = Collections.synchronizedList(new ArrayList<>());
+        clientStates = Collections.synchronizedList(new ArrayList<>());
+
         for(int i=0; i<connections; i++) {
             ObjectNode finalNode = node;
             int msg = node.get("msg").asInt();
+            String tt = node.get("tt").asText();
+
             ByteBuffer bf = ByteBuffer.allocate(msg);
             SocketChannel socketChannel;
             try {
                 socketChannel = SocketChannel.open();
                 log.info("trying to connect on {}:{}", serverReal.ip, serverReal.port);
                 socketChannel.connect(new InetSocketAddress(serverReal.ip, serverReal.port));
-                log.info("connection established on on {}:{}", serverReal.ip, serverReal.port);
+                log.info("{}/{} th connection established on on {}:{}", i, connections, serverReal.ip, serverReal.port);
             } catch (IOException e) {
                 throw new RemoteException("", e);
             }
 
-            clientThreads.add(new ThrowingThread(() -> {
-                try {
-                    singleConnectionTcpStream(finalNode, socketChannel, bf);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }));
+            final ClientState state = new ClientState();
+            clientStates.add(state);
+            if(tt.equals("TCP_STREAM")) {
+                clientThreads.add(new ThrowingThread(() -> {
+                    try {
+                        singleConnectionTcpStream(finalNode, socketChannel, bf, state);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            } else {
+                clientThreads.add(new ThrowingThread(() -> {
+                    try {
+                        singleConnectionTcpRr(finalNode, socketChannel, bf, state);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            }
         }
     }
 
-    private void singleConnectionTcpStream(ObjectNode node, SocketChannel socketChannel, ByteBuffer bf) throws IOException {
+    @Override
+    public String clientResult() throws RemoteException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("bytes,durationMillis,p50,p75Nanos,p90Nanos,p95Nanos,p99Nanos,p99.9Nanos,maxNanos,count");
 
+        for (ClientState state : clientStates) {
+            Pair pair = toStat(state.rttLat.snap(), "");
+            sb.append(String.format("\n%d,%d,%s", state.bytes, state.durationMillis, pair.s2));
+        }
+        return sb.toString();
+    }
+
+    private void singleConnectionTcpStream(ObjectNode node, SocketChannel socketChannel, ByteBuffer bf, ClientState state) throws IOException {
+        long start = System.nanoTime();
+        log.debug("client started yo! {}", System.nanoTime());
         while(true) {
             try {
-                socketChannel.write(bf);
+                state.bytes += socketChannel.write(bf);
             } catch(IOException e) {
-                log.info("io exception in client");
+                state.durationMillis = (System.nanoTime() - start)/1000_000L;
+                log.debug("client ended {} durationMillis:{}", System.nanoTime(), (System.nanoTime() - start)/1000_000L );
                 socketChannel.close();
                 break;
             }
             bf.clear();
         }
+    }
+//    AtomicInteger count = new AtomicInteger();
 
+    private void singleConnectionTcpRr(ObjectNode node, SocketChannel socketChannel, ByteBuffer bf, ClientState state) throws IOException {
+        long start = System.nanoTime();
+        outer: while(true) {
+            while(bf.hasRemaining()) {
+                try {
+                    state.bytes += socketChannel.write(bf);
+                } catch (IOException e) {
+                    state.durationMillis = (System.nanoTime() - start) / 1000_000L;
+                    socketChannel.close();
+                    log.info("closing on client side write :");
+                    break outer;
+                }
+            }
+            bf.clear();
+
+            while(bf.hasRemaining()) {
+                try {
+                    long now = socketChannel.read(bf);
+                    if(now == -1) {
+                        state.durationMillis = (System.nanoTime() - start) / 1000_000L;
+                        socketChannel.close();
+                        log.info("closing on client side read -1: ");
+
+                        break outer;
+                    }
+                } catch (IOException e) {
+                    state.durationMillis = (System.nanoTime() - start) / 1000_000L;
+                    socketChannel.close();
+                    log.info("closing on client side read exception: ");
+
+                    break outer;
+                }
+            }
+            bf.clear();
+            state.rttLat.count();
+        }
     }
 
     @Override
@@ -310,6 +404,7 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
     private ThrowingThread listeningThread;
     private volatile boolean isRunning = false;
     private CountDownLatch clientLatch;
+    volatile boolean exitListen = false;
 
     @Override
     public void serverInit(String testcaseJson, int numClients) throws RemoteException{
@@ -317,6 +412,7 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             throw new RemoteException("already some test is running");
         }
         isRunning = true;
+        exitListen = false;
         ObjectMapper m = new ObjectMapper();
         ObjectNode node = null;
         try {
@@ -330,6 +426,13 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
         int msg = node.get("msg").asInt();
         if(node.get("time")!=null) {
             timeMs = node.get("time").asLong();
+        }
+
+        TestType tt;
+        if(node.get("tt").asText().equals("TCP_STREAM")) {
+            tt = TestType.TCP_STREAM;
+        } else {
+            tt = TestType.TCP_RR;
         }
 
         loops = Collections.synchronizedList(new ArrayList<>());
@@ -354,8 +457,8 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
 
 
         CountDownLatch latch = new CountDownLatch(1);
+        int tot = numClients*connectionsPerClient;
         clientLatch = new CountDownLatch(numClients*connectionsPerClient);
-
         listeningThread = new ThrowingThread(new Runnable() {
             @Override
             public void run() {
@@ -364,16 +467,17 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
                     ssc.configureBlocking(false);
                     Selector selector = Selector.open();
                     ServerSocket ss = ssc.socket();
-                    ss.bind(new InetSocketAddress(serverReal.port));
+
+                    ss.bind(new InetSocketAddress(serverReal.port), 10000);
                     ssc.register(selector, SelectionKey.OP_ACCEPT);
                     long start = System.nanoTime();
                     int currentSelector = 0;
                     log.info("server started listening on {}", serverReal.port);
                     latch.countDown();
+                    int c = 0;
 
                     while (true) {
-                        long now = System.nanoTime();
-                        if (now - start > timeMs * 1000L * 1000L) {
+                        if (exitListen) {
                             log.info("exiting listen loop");
                             for (SelectionKey key : selector.keys()) {
                                 key.channel().close();
@@ -394,14 +498,14 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
                                 SocketChannel socketChannel = channel.accept();
                                 socketChannel.configureBlocking(false);
                                 currentSelector %= selectors.size();
-                                log.info("assigning client to selector:{}", currentSelector);
+                                log.info("assigning client {}/{} to selector:{}", c++, tot, currentSelector);
                                 State state = new State(ByteBuffer.allocateDirect(msg), System.nanoTime(), socketChannel.getRemoteAddress().toString());
                                 states.add(state);
-                                socketChannel.register(selectors.get(currentSelector++), SelectionKey.OP_READ, state);
+                                int interest = SelectionKey.OP_READ;
+                                socketChannel.register(selectors.get(currentSelector++), interest, state);
                                 clientLatch.countDown();
                             }
                             iterator.remove();
-
                         }
                     }
 
@@ -415,6 +519,15 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             latch.await();
         } catch (InterruptedException e) {
             throw new RemoteException("", e);
+        }
+    }
+
+    @Override
+    public void serverState() throws RemoteException{
+        for (ThrowingThread loop : loops) {
+            if(loop.myUEH.e!=null) {
+                throw new RemoteException("", loop.myUEH.e);
+            }
         }
     }
 
@@ -443,7 +556,7 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
         //output
         LatencyTimerThreadUnsafe selectLat = new LatencyTimerThreadUnsafe();
         LatencyTimerThreadUnsafe readLat = new LatencyTimerThreadUnsafe();
-        LatencyTimerThreadUnsafe remainingLat = new LatencyTimerThreadUnsafe();
+        LatencyTimerThreadUnsafe writeLat = new LatencyTimerThreadUnsafe();
         LatencyTimerThreadUnsafe totalLat = new LatencyTimerThreadUnsafe();
 
         public ServerNioLoop(ObjectNode node, Selector selector, long timeMs) {
@@ -455,26 +568,39 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
         @Override
         public void run() {
             try {
-                ObjectMapper m = new ObjectMapper();
+                TestType tt;
+                if(node.get("tt").asText().equals("TCP_STREAM")) {
+                    tt = TestType.TCP_STREAM;
+                } else {
+                    tt = TestType.TCP_RR;
+                }
 
                 long start = System.nanoTime();
                 long a = start;
                 outer:
                 while (true) {
-                    long b;
+                    long b = 0;
+//                    if(b-a < 0) {
+//                        System.out.println("fooooooooooo");
+//                    }
                     long temp = System.nanoTime();
-                    selector.select(1000L);
-                    b = System.nanoTime();
 
                     totalLat.count(temp - a);
                     a = temp;
+                    selector.select(1000L);
+                    b = System.nanoTime();
+
                     selectLat.count(b-a);
                     if (a - start > timeMs * 1000L * 1000L) {
                         log.info("exiting recieve loop");
+                        int k=0;
                         for (SelectionKey key : selector.keys()) {
                             key.channel().close();
                             key.cancel();
+                            k++;
+                            Thread.sleep(20);
                         }
+                        log.info("closed {} connections from server", k);
                         selector.close();
                         break;
                     }
@@ -482,38 +608,92 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
                     Iterator<SelectionKey> iterator = selectionKeys.iterator();
                     while (iterator.hasNext()) {
                         SelectionKey key = iterator.next();
-                        SocketChannel ch = (SocketChannel) key.channel();
-                        State state = (State) key.attachment();
-                        if (!state.bf.hasRemaining()) {
-                            state.bf.clear();
-                        }
-                        while (true) {
-                            if(!state.bf.hasRemaining()) {
-                                break;
-                            }
-                            int readNow = 0;
-                            long c = System.nanoTime();
-                            readNow = ch.read(state.bf);
-                            long d = System.nanoTime();
-                            readLat.count(d-c);
-                            remainingLat.count(c-b);
-
-                            if (readNow == -1) {
-                                throw new RuntimeException("why did the client close the stream?");
-                            }
-                            if (readNow == 0) {
-                                break;
-                            }
-                            state.bytes += readNow;
+                        if(tt==TestType.TCP_STREAM) {
+                            doTcpStream(key, b);
+                        } else {
+                            doTcpRr(key, b);
                         }
                         iterator.remove();
                     }
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 if (e instanceof RuntimeException) {
                     throw (RuntimeException)e;
                 }
                 throw new RuntimeException(e);
+            }
+        }
+
+        private void doTcpRr(SelectionKey key, long b) throws IOException {
+            SocketChannel ch = (SocketChannel) key.channel();
+            State state = (State) key.attachment();
+            if(state.reading && key.isReadable()) {
+                readAndUpdateLatencies(state, ch, b);
+            }
+            maybeFlipState(state);
+
+            if(!state.reading && (!state.writeInterest || key.isWritable()) ) {
+                writeAndUpdateLatencies(state, ch, b, key);
+            }
+            maybeFlipState(state);
+        }
+
+
+        private void doTcpStream(SelectionKey key, long b) throws IOException {
+            SocketChannel ch = (SocketChannel) key.channel();
+            State state = (State) key.attachment();
+            maybeFlipState(state);
+            readAndUpdateLatencies(state, ch, b);
+        }
+
+        private void readAndUpdateLatencies(State state, SocketChannel ch, long b) throws IOException {
+            while (true) {
+                int readNow = 0;
+                long c = System.nanoTime();
+                readNow = ch.read(state.bf);
+                long d = System.nanoTime();
+                readLat.count(d-c);
+
+                if (readNow == -1) {
+                    throw new RuntimeException("why did the client close the stream?");
+                }
+
+                state.bytes += readNow;
+                if (readNow == 0 || !state.bf.hasRemaining()) {
+                    break;
+                }
+            }
+        }
+
+        private void writeAndUpdateLatencies(State state, SocketChannel ch, long b, SelectionKey key) throws IOException {
+            if(state.writeInterest) {
+                // reset the write interest
+                key.interestOps(SelectionKey.OP_READ);
+                state.writeInterest = false;
+            }
+            while (true) {
+                int writeNow = 0;
+                long c = System.nanoTime();
+                writeNow = ch.write(state.bf);
+                long d = System.nanoTime();
+                writeLat.count(d-c);
+                if(!state.bf.hasRemaining()) {
+                    break;
+                }
+                // rare condition, in this case, reenable the write interest
+                if (writeNow == 0) {
+                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                    state.writeInterest = true;
+                    break;
+                }
+            }
+        }
+
+        private void maybeFlipState(State state) {
+            if(!state.bf.hasRemaining()) {
+                state.bf.clear();
+                state.reading = !state.reading;
             }
         }
     }
@@ -543,6 +723,8 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             }
         }
 
+        exitListen = true;
+
         try {
             listeningThread.join();
         } catch (InterruptedException e) {
@@ -562,7 +744,7 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             p = toStat(loop.readLat.snap(), "readLat_");
             s1 += p.s1+","; s2+=p.s2+",";
 
-            p = toStat(loop.remainingLat.snap(), "remainingLat_");
+            p = toStat(loop.writeLat.snap(), "writeLat_");
             s1 += p.s1+","; s2+=p.s2+",";
 
             p = toStat(loop.totalLat.snap(), "totalLat_");
@@ -574,9 +756,9 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
         node.set("serverNioLoops", arn);
 
 
-        if(states.size() != 2*node.get("connectionsPerClient").asInt()) {
-            throw new RuntimeException(String.format("states.size()=%d but expected 2*%d", states.size(), node.get("connectionsPerClient").asInt()));
-        }
+//        if(states.size() != 2*node.get("connectionsPerClient").asInt()) {
+//            throw new RuntimeException(String.format("states.size()=%d but expected 2*%d", states.size(), node.get("connectionsPerClient").asInt()));
+//        }
         arn = m.createArrayNode();
 
         for (State state : states) {
@@ -584,8 +766,9 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             String s2 = String.format("%s,%d,%d", state.clientIp, (System.nanoTime()-state.startNanos)/1000000L, state.bytes);
             arn.add(s1+"\n"+s2);
         }
+
         node.set("clients", arn);
-        node.put("completed", true);
+//        node.put("completed", true);
 
         try {
             return m.writerWithDefaultPrettyPrinter().writeValueAsString(node);
@@ -659,11 +842,16 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
         long bytes;
         LatencyTimerThreadUnsafe lt = new LatencyTimerThreadUnsafe();
     }
-    class State {
+    private class State {
+        // common to both tcp_stream and tcp_rr
         public ByteBuffer bf;
-        public String clientIp = "";
-        public long startNanos=0;
-        public long bytes = 0;
+        String clientIp = "";
+        long startNanos=0;
+        long bytes = 0;
+
+        //used by tcp_rr
+        boolean reading = true;
+        boolean writeInterest = false;
 
         public State(ByteBuffer bf, long startNanos, String clientIp) {
             this.bf = bf;
@@ -671,6 +859,12 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             this.clientIp = clientIp;
         }
     }
+
+    private class ClientState {
+        long bytes, durationMillis;
+        LatencyTimerThreadUnsafe rttLat = new LatencyTimerThreadUnsafe();
+    }
+
     class ThrowingThread extends Thread {
         MyUEH myUEH;
         public ThrowingThread(Runnable target) {
@@ -718,23 +912,23 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
             }
         }
         return ret;
-
-
     }
 
     void genTestCase() throws JsonProcessingException {
-        int[] connectionsPerClients = {1, 5};
-        int[] msg = {1, 8};
-        int[] nioloops = {1, 5};
-        String[] tt = {"TCP_STREAM", "TCP_RR"};
+        int clients = 4;
+//        int[] connectionsPerClients = {1000/clients, 1200/clients, 1400/clients, 1800/clients, 2500/clients, 5000/clients};
+        int[] connectionsPerClients = {4/clients, 8/clients, 16/clients, 32/clients, 64/clients, 128/clients, 256/clients, 512/clients, 1024/clients, 2048/clients, 4096/clients};
+        int[] msg = {1024, 1024*32};
+        int[] nioloops = {10};
+        String[] tt = {"TCP_RR"};
         ObjectMapper m = new ObjectMapper();
         ArrayNode arrayNode = m.createArrayNode();
-        for (String ttt : tt) {
-
+        for (int nioloop : nioloops) {
             for (int msgg : msg) {
                 for (int connectionsPerClient : connectionsPerClients) {
-                    for (int nioloop : nioloops) {
-                        JsonNode node = m.createObjectNode()
+                        for (String ttt : tt) {
+
+                            JsonNode node = m.createObjectNode()
                                 .put("connectionsPerClient", connectionsPerClient)
                                 .put("msg", msgg)
                                 .put("tt", ttt)
@@ -847,10 +1041,8 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
                 log.debug("{}, {}",name, ret);
             }
         }
-
-
-
     }
+
     private static class LatRet implements Serializable {
         public double[] nanos;
         public double[] pTiles;
@@ -899,11 +1091,13 @@ interface ServerRmi extends Remote {
     void serverWaitForClientConnect() throws RemoteException;
     String serverResult(String testcaseJson) throws RemoteException;
     void serverStartNioLoops() throws RemoteException;
+    void serverState() throws RemoteException;
 }
 
 interface ClientRmi extends Remote {
     void clientInit(String testcase) throws RemoteException;
     void clientStart() throws RemoteException;
+    String clientResult() throws RemoteException;
 }
 interface GatewayRmi extends Remote {
 

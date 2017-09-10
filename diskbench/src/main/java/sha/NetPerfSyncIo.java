@@ -40,8 +40,8 @@ public class NetPerfSyncIo
 
     public static void main( String[] args ) throws Exception{
         if (args.length==0) {
-            args = new String[]{"client", "server", "gentestcase"};
-//            args = new String[]{"gentestcase"};
+//            args = new String[]{"client", "server", "gentestcase"};
+            args = new String[]{"gentestcase"};
         }
 
 
@@ -122,7 +122,7 @@ public class NetPerfSyncIo
     }
 
     public static class Settings {
-        public String serverIp = "172.17.151.207";
+        public String serverIp = "10.33.217.242";
         public int time = 20_000;
         // required for jackson
         public Settings() {
@@ -472,7 +472,7 @@ public class NetPerfSyncIo
 //                    log.debug("count {}", count);
                     long now = System.currentTimeMillis();
                     if(now - last > 2000) {
-                        System.out.println((int)((written-lastWritten)*8.0/(1000.0*(now-last))));
+//                        System.out.println((int)((written-lastWritten)*8.0/(1000.0*(now-last))));
                         lastWritten = written;
                         last = now;
                     }
@@ -484,13 +484,8 @@ public class NetPerfSyncIo
                         return new ClientRet(((double)written)/secs, secs, lat.snap());
                     }
                 }
-
             }
-
-
         }
-
-
         static class ClientRet {
             public double trpt;
             public double secs;
