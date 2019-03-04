@@ -1,1 +1,1 @@
-rm -r .idea *.iml target
+rm -r .idea *.iml target *.log
