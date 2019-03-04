@@ -24,8 +24,8 @@
     </Appenders>
     <Loggers>
         <Root level="error">
-            <!--<AppenderRef ref="CONSOLE" />-->
-            <AppenderRef ref="RollingFile" />
+            <AppenderRef ref="CONSOLE" />
+            <!--<AppenderRef ref="RollingFile" />-->
         </Root>
 
         <Logger name="sha" level="all"/>

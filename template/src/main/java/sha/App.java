@@ -1,12 +1,10 @@
 package sha;
 
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.util.Map;
-
-import static sha.Utils.*;
+import static sha.Utils.readJsonFromClasspath;
 
 public class App 
 {
@@ -22,7 +20,7 @@ public class App
                 log.warn("settings.json not found on classpath");
                 s = new Settings();
             }
-            log.info("Using settings:{}", dumps(s));
+//            log.info("Using settings:{}", dumps(s));
             obj.go();
         } catch (Exception e) {
             log.error("", e);
@@ -42,33 +40,6 @@ public class App
      */
     private void go() throws Exception {
         log.debug("Hello, world!");
-        Timer t = new Timer("yo");
-        LatencyTimer lt = new LatencyTimer("asdf");
-        long now = System.nanoTime();
-        while(true) {
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            t.count();
-            long tt = System.nanoTime();
-            lt.count(tt-now);
-            now = tt;
-
-        }
     }
 
 }
