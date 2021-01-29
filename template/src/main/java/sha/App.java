@@ -4,6 +4,7 @@ package sha;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import static sha.Utils.dumps;
 import static sha.Utils.readJsonFromClasspath;
 
 public class App 
@@ -14,13 +15,19 @@ public class App
     public static void main( String[] args ) {
         try {
             App obj = new App();
+
+
+            String path = "settings.json";
+
             try {
-                s = readJsonFromClasspath("settings.json", Settings.class);
+                if(args.length>0) {
+                    path = args[0];
+                }
+                s = readJsonFromClasspath(path, Settings.class);
             } catch (Exception e) {
-                log.warn("settings.json not found on classpath");
                 s = new Settings();
             }
-//            log.info("Using settings:{}", dumps(s));
+//            log.info("Using settings:\n{}", dumps(s));
             obj.go();
         } catch (Exception e) {
             log.error("", e);
