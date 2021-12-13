@@ -1,0 +1,594 @@
+{
+  "additionalProperties" : false,
+  "type" : "object",
+  "properties" : {
+    "productFamily" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalItems" : false,
+        "type" : "array",
+        "items" : {
+          "type" : "string"
+        }
+      } ]
+    },
+    "analyticsInfo" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalProperties" : false,
+        "type" : "object",
+        "properties" : {
+          "subCategory" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "type" : "string"
+            } ]
+          },
+          "superCategory" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "type" : "string"
+            } ]
+          },
+          "vertical" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "type" : "string"
+            } ]
+          },
+          "category" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "type" : "string"
+            } ]
+          }
+        },
+        "required" : [ ]
+      } ]
+    },
+    "isEbook" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "boolean"
+      } ]
+    },
+    "lockinbenefits" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalProperties" : false,
+        "type" : "object",
+        "properties" : {
+          "freeShipping" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "additionalProperties" : false,
+              "type" : "object",
+              "properties" : {
+                "actualBenefit" : {
+                  "anyOf" : [ {
+                    "type" : "null"
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "potentialBenefits" : {
+                  "anyOf" : [ {
+                    "type" : "null"
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "eligibleBenefits" : {
+                  "anyOf" : [ {
+                    "type" : "null"
+                  }, {
+                    "type" : "string"
+                  } ]
+                }
+              },
+              "required" : [ ]
+            } ]
+          },
+          "hasEarlyAccess" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "type" : "boolean"
+            } ]
+          },
+          "fastShipping" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "additionalProperties" : false,
+              "type" : "object",
+              "properties" : {
+                "actualBenefit" : {
+                  "anyOf" : [ {
+                    "type" : "null"
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "potentialBenefits" : {
+                  "anyOf" : [ {
+                    "type" : "null"
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "eligibleBenefits" : {
+                  "anyOf" : [ {
+                    "type" : "null"
+                  }, {
+                    "type" : "string"
+                  } ]
+                }
+              },
+              "required" : [ ]
+            } ]
+          }
+        },
+        "required" : [ ]
+      } ]
+    },
+    "isDigital" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "boolean"
+      } ]
+    },
+    "productId" : {
+      "type" : "string"
+    },
+    "isVisualDiscoverEnabled" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "boolean"
+      } ]
+    },
+    "vertical" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "isVideoAvaiable" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "boolean"
+      } ]
+    },
+    "isSwatchAvailable" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "boolean"
+      } ]
+    },
+    "productState" : {
+      "type" : "string"
+    },
+    "swatches" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalItems" : false,
+        "type" : "array",
+        "items" : {
+          "additionalProperties" : false,
+          "type" : "object",
+          "properties" : {
+            "attribute" : {
+              "type" : "string"
+            },
+            "option" : {
+              "type" : "string"
+            }
+          },
+          "required" : [ "attribute", "option" ]
+        }
+      } ]
+    },
+    "importanceType" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "marketplaceId" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "ugc" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalProperties" : false,
+        "type" : "object",
+        "properties" : {
+          "reviewCount" : {
+            "maximum" : 2147483647,
+            "type" : "integer",
+            "minimum" : -2147483648
+          },
+          "ratingBase" : {
+            "maximum" : 2147483647,
+            "type" : "integer",
+            "minimum" : -2147483648
+          },
+          "avgRating" : {
+            "maximum" : 1.7976931348623157E308,
+            "type" : "number",
+            "minimum" : -1.7976931348623157E308
+          },
+          "ratingCount" : {
+            "maximum" : 2147483647,
+            "type" : "integer",
+            "minimum" : -2147483648
+          }
+        },
+        "required" : [ "reviewCount", "ratingBase", "avgRating", "ratingCount" ]
+      } ]
+    },
+    "listings" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalItems" : false,
+        "type" : "array",
+        "items" : {
+          "additionalProperties" : false,
+          "type" : "object",
+          "properties" : {
+            "fsp" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "maximum" : 2147483647,
+                "type" : "integer",
+                "minimum" : -2147483648
+              } ]
+            },
+            "deliveryOptionInfo" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "additionalItems" : false,
+                "type" : "array",
+                "items" : {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "codAvailable" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "boolean"
+                      } ]
+                    },
+                    "ffApplied" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "boolean"
+                      } ]
+                    },
+                    "price" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "additionalProperties" : false,
+                        "type" : "object",
+                        "properties" : {
+                          "currency" : {
+                            "type" : "string"
+                          },
+                          "value" : {
+                            "maximum" : 2147483647,
+                            "type" : "integer",
+                            "minimum" : -2147483648
+                          }
+                        },
+                        "required" : [ "currency", "value" ]
+                      } ]
+                    },
+                    "shownOnProductPage" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "boolean"
+                      } ]
+                    },
+                    "serviceable" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "boolean"
+                      } ]
+                    },
+                    "deliveryDate" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "maximum" : 9223372036854775807,
+                        "type" : "integer",
+                        "minimum" : -9223372036854775808
+                      } ]
+                    },
+                    "speed" : {
+                      "type" : "string"
+                    }
+                  },
+                  "required" : [ "speed" ]
+                }
+              } ]
+            },
+            "offerSummary" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "additionalItems" : false,
+                "type" : "array",
+                "items" : {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "id" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "type" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    }
+                  },
+                  "required" : [ ]
+                }
+              } ]
+            },
+            "offerCount" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "maximum" : 2147483647,
+                "type" : "integer",
+                "minimum" : -2147483648
+              } ]
+            },
+            "finalPrice" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "maximum" : 2147483647,
+                "type" : "integer",
+                "minimum" : -2147483648
+              } ]
+            },
+            "mrp" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "maximum" : 2147483647,
+                "type" : "integer",
+                "minimum" : -2147483648
+              } ]
+            },
+            "listingId" : {
+              "type" : "string"
+            },
+            "offerIds" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "additionalItems" : false,
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              } ]
+            },
+            "isServiceable" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "displayedFinalPrice" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "maximum" : 2147483647,
+                "type" : "integer",
+                "minimum" : -2147483648
+              } ]
+            },
+            "sellerId" : {
+              "type" : "string"
+            },
+            "flipkartAdvantage" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "showMRP" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "exchangeDetails" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "additionalProperties" : false,
+                "type" : "object",
+                "properties" : {
+                  "pincode" : {
+                    "anyOf" : [ {
+                      "type" : "null"
+                    }, {
+                      "maximum" : 2147483647,
+                      "type" : "integer",
+                      "minimum" : -2147483648
+                    } ]
+                  },
+                  "offerId" : {
+                    "type" : "string"
+                  },
+                  "serviceable" : {
+                    "anyOf" : [ {
+                      "type" : "null"
+                    }, {
+                      "type" : "boolean"
+                    } ]
+                  }
+                },
+                "required" : [ "offerId" ]
+              } ]
+            },
+            "availibilityStatus" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "type" : "string"
+              } ]
+            },
+            "deliveryDate" : {
+              "anyOf" : [ {
+                "type" : "null"
+              }, {
+                "pattern" : "^(19[7-9][0-9]|2\\d{3})-((((0[13578])|(1[02]))-(([0-2][0-9])|(3[01])))|(((0[469])|(11))-(([0-2][0-9])|(30)))|(02-?[0-2][0-9]))([tT ]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.\\d+)?([zZ]|[+-]\\d{2}(:|)\\d{2}|\\b)|\\b)$",
+                "type" : "string"
+              } ]
+            },
+            "listingState" : {
+              "type" : "string"
+            }
+          },
+          "required" : [ "listingId", "sellerId", "listingState" ]
+        }
+      } ]
+    },
+    "itemId" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "fetchId" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "urgency" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalProperties" : false,
+        "type" : "object",
+        "properties" : {
+          "messageShown" : {
+            "type" : "boolean"
+          },
+          "type" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "additionalItems" : false,
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            } ]
+          }
+        },
+        "required" : [ "messageShown" ]
+      } ]
+    },
+    "latestVersion" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "exchangeDetails" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "additionalProperties" : false,
+        "type" : "object",
+        "properties" : {
+          "pincode" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "maximum" : 2147483647,
+              "type" : "integer",
+              "minimum" : -2147483648
+            } ]
+          },
+          "offerId" : {
+            "type" : "string"
+          },
+          "serviceable" : {
+            "anyOf" : [ {
+              "type" : "null"
+            }, {
+              "type" : "boolean"
+            } ]
+          }
+        },
+        "required" : [ "offerId" ]
+      } ]
+    },
+    "isImagesAvailable" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "boolean"
+      } ]
+    },
+    "listingsCount" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "maximum" : 2147483647,
+        "type" : "integer",
+        "minimum" : -2147483648
+      } ]
+    }
+  },
+  "required" : [ "productId", "productState" ]
+}

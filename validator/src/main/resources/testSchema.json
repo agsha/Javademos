@@ -1,0 +1,43 @@
+{
+  "additionalProperties" : false,
+  "type" : "object",
+  "properties" : {
+    "fsn" : {
+      "type" : "string"
+    },
+    "originalPrice" : {
+      "type" : "string"
+    },
+    "policyId" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "maximum" : 9223372036854775807,
+        "type" : "integer",
+        "minimum" : -9223372036854775808
+      } ]
+    },
+    "priceChangeExecutionId" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "finalPrice" : {
+      "type" : "string"
+    },
+    "priceChangeRequestId" : {
+      "anyOf" : [ {
+        "type" : "null"
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "timestamp" : {
+      "pattern" : "^(19[7-9][0-9]|2\\d{3})-((((0[13578])|(1[02]))-(([0-2][0-9])|(3[01])))|(((0[469])|(11))-(([0-2][0-9])|(30)))|(02-?[0-2][0-9]))([tT ]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.\\d+)?([zZ]|[+-]\\d{2}(:|)\\d{2}|\\b)|\\b)$",
+      "type" : "string"
+    }
+  },
+  "required" : [ "fsn", "originalPrice", "finalPrice", "timestamp" ]
+}

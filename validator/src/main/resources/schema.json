@@ -1,0 +1,497 @@
+{
+  "additionalProperties" : false,
+  "type" : "object",
+  "properties" : {
+    "core" : {
+      "additionalProperties" : false,
+      "type" : "object",
+      "properties" : {
+        "sourceClient" : {
+          "anyOf" : [ {
+            "type" : "null"
+          },
+            {
+            "type" : "string",
+            "enum" : [ "Mapi", "Msite", "Website", "mWebsite", "AndroidApp", "IOSApp", "EbookApp", "WindowsApp", "AndroidEbookApp", "WindowsEbookApp", "IOSEbookApp" ]
+          } ]
+        },
+        "requestId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "referrerRequestId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "URI" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "timestamp" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "maximum" : 9223372036854775807,
+            "type" : "integer",
+            "minimum" : -9223372036854775808
+          } ]
+        }
+      },
+      "required" : [ ]
+    },
+    "debug" : {
+      "additionalProperties" : false,
+      "type" : "object",
+      "properties" : {
+        "hostName" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        }
+      },
+      "required" : [ ]
+    },
+    "visit" : {
+      "additionalProperties" : false,
+      "type" : "object",
+      "properties" : {
+        "pincode" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "cartId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "isPreprod" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "boolean"
+          } ]
+        },
+        "trafficType" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "userAgent" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "additionalProperties" : false,
+            "type" : "object",
+            "properties" : {
+              "osInfo" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "family" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "version" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "versionPopularName" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    }
+                  },
+                  "required" : [ ]
+                } ]
+              },
+              "appInfo" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "type" : {
+                      "type" : "string"
+                    },
+                    "version" : {
+                      "type" : "string"
+                    }
+                  },
+                  "required" : [ "type", "version" ]
+                } ]
+              },
+              "browserInfo" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "family" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "version" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    }
+                  },
+                  "required" : [ ]
+                } ]
+              },
+              "deviceInfo" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "family" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "type" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "deviceId" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    }
+                  },
+                  "required" : [ ]
+                } ]
+              }
+            },
+            "required" : [ ]
+          } ]
+        },
+        "sessionId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "sdkAdId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "mpId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "accountId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "abIds" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "additionalItems" : false,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          } ]
+        },
+        "adId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "abImpressionId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "visitId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "location" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "additionalProperties" : false,
+            "type" : "object",
+            "properties" : {
+              "country" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "type" : "string"
+                } ]
+              },
+              "city" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "type" : "string"
+                } ]
+              },
+              "IP" : {
+                "type" : "string"
+              },
+              "latitude" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "maximum" : 1.7976931348623157E308,
+                  "type" : "number",
+                  "minimum" : -1.7976931348623157E308
+                } ]
+              },
+              "state" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "type" : "string"
+                } ]
+              },
+              "longitude" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "maximum" : 1.7976931348623157E308,
+                  "type" : "number",
+                  "minimum" : -1.7976931348623157E308
+                } ]
+              },
+              "info" : {
+                "anyOf" : [ {
+                  "type" : "null"
+                }, {
+                  "additionalProperties" : false,
+                  "type" : "object",
+                  "properties" : {
+                    "ipLocation" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "additionalProperties" : false,
+                        "type" : "object",
+                        "properties" : {
+                          "country" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "city" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "ip" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "state" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          }
+                        },
+                        "required" : [ ]
+                      } ]
+                    },
+                    "userInsightLocation" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "additionalProperties" : false,
+                        "type" : "object",
+                        "properties" : {
+                          "country" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "city" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "state" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          }
+                        },
+                        "required" : [ ]
+                      } ]
+                    },
+                    "geolocation" : {
+                      "anyOf" : [ {
+                        "type" : "null"
+                      }, {
+                        "additionalProperties" : false,
+                        "type" : "object",
+                        "properties" : {
+                          "country" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "isLatest" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "boolean"
+                            } ]
+                          },
+                          "city" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "state" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "type" : "string"
+                            } ]
+                          },
+                          "timestamp" : {
+                            "anyOf" : [ {
+                              "type" : "null"
+                            }, {
+                              "maximum" : 9223372036854775807,
+                              "type" : "integer",
+                              "minimum" : -9223372036854775808
+                            } ]
+                          }
+                        },
+                        "required" : [ ]
+                      } ]
+                    }
+                  },
+                  "required" : [ ]
+                } ]
+              }
+            },
+            "required" : [ "IP" ]
+          } ]
+        },
+        "isCrawler" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "boolean"
+          } ]
+        },
+        "networkType" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "lockinUserState" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "additionalProperties" : false,
+            "type" : "object",
+            "properties" : {
+              "membershipStatus" : {
+                "type" : "string"
+              }
+            },
+            "required" : [ "membershipStatus" ]
+          } ]
+        },
+        "visitorId" : {
+          "anyOf" : [ {
+            "type" : "null"
+          }, {
+            "type" : "string"
+          } ]
+        }
+      },
+      "required" : [ ]
+    }
+  },
+  "required" : [ "core", "debug", "visit" ]
+}

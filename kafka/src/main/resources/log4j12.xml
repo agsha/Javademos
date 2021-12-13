@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="RFA" class="org.apache.log4j.AsyncAppender">
+        <param name="BufferSize" value="10240" />
+        <param name="Blocking" value="true" />
+        <appender-ref ref="RFAF" />
+    </appender>
+    <appender name="RFAF" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="logging.log"/>
+        <param name="ImmediateFlush" value="false"/>
+        <param name="MaxBackupIndex" value="20"/>
+        <param name="MaxFileSize" value="256MB"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{ISO8601} %-5p %c{2} (%F:%M(%L)) - %m%n"/>
+        </layout>
+    </appender>
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="RFAF"/>
+    </root>
+</log4j:configuration>
