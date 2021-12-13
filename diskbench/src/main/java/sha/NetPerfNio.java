@@ -915,12 +915,12 @@ public class NetPerfNio implements ServerRmi, ClientRmi, GatewayRmi
     }
 
     void genTestCase() throws JsonProcessingException {
-        int clients = 4;
+        int clients = 2;
 //        int[] connectionsPerClients = {1000/clients, 1200/clients, 1400/clients, 1800/clients, 2500/clients, 5000/clients};
-        int[] connectionsPerClients = {4/clients, 8/clients, 16/clients, 32/clients, 64/clients, 128/clients, 256/clients, 512/clients, 1024/clients, 2048/clients, 4096/clients};
-        int[] msg = {1024, 1024*32};
-        int[] nioloops = {10};
-        String[] tt = {"TCP_RR"};
+        int[] connectionsPerClients = {4/clients};
+        int[] msg = {1024, 1024*4};
+        int[] nioloops = {5, 10};
+        String[] tt = {"TCP_RR", "TCP_STREAM"};
         ObjectMapper m = new ObjectMapper();
         ArrayNode arrayNode = m.createArrayNode();
         for (int nioloop : nioloops) {

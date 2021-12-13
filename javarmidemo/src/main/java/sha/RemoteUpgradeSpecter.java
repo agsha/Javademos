@@ -5,10 +5,10 @@ import com.flipkart.specter.api.AdminApi;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class Client
+public class RemoteUpgradeSpecter
 {
     public static void main( String[] args ) throws Exception {
-        Client obj = new Client();
+        RemoteUpgradeSpecter obj = new RemoteUpgradeSpecter();
         obj.client();
     }
 

@@ -295,6 +295,24 @@ public class Utils {
         }
         System.out.println(s);
     }
+
+    public static void main(String[] args) throws InterruptedException {
+        //log.debug("{}", httpPostJson("http://posttestserver.com/post.php", "f u"));
+        //log.debug("{}", httpPostJson("http://httpbin.org/post", "f u"));
+        Utils u = new Utils();
+        u.go();
+    }
+
+    private void go() throws InterruptedException {
+        Timer t = new Timer("ASfd");
+        int c = 0;
+        for (int i = 0; i < 10000000; i++) {
+            t.cumulativeCount(c++);
+            Thread.sleep(100);
+        }
+
+    }
+
     public static class LatencyTimer extends Thread {
         private static char noname = 'A';
         private final String name;
@@ -314,8 +332,9 @@ public class Utils {
         public LatencyTimer(Class name) {
             this(new LatDefaultPrinter(), name.getName());
         }
+
         public LatencyTimer() {
-            this(new LatDefaultPrinter(), ""+noname);
+            this(new LatDefaultPrinter(), "" + noname);
             noname += 1;
         }
 
@@ -326,12 +345,6 @@ public class Utils {
         public LatencyTimer(LatPrinter p, String name) {
             this.name = name;
             this.printer = p;
-            pTiles = new double[100];
-            for(int i=0; i<100; i++) {
-                pTiles[i] = i+1;
-            }
-            pTiles[99] = 99.9;
-
             reset();
             setDaemon(true);
             start();
@@ -344,47 +357,48 @@ public class Utils {
         public void count(long latencyNanos) {
             int index = 0;
             maxNanos.set(Math.max(maxNanos.get(), latencyNanos));
-            while(latencyNanos >= 1000) {
+            while (latencyNanos >= 1000) {
                 latencyNanos /= 1000;
-                index+=1000;
+                index += 1000;
             }
 
 
-            bins[(int) Math.min(index + latencyNanos, bins.length-1)].incrementAndGet();
+            bins[(int) Math.min(index + latencyNanos, bins.length - 1)].incrementAndGet();
         }
 
         public void count() {
             long now = System.nanoTime();
-            count(Math.max(now-lastCount.get(), 0));
+            count(Math.max(now - lastCount.get(), 0));
             lastCount.set(now);
         }
 
         public void reset() {
-            for(int i=0; i<bins.length; i++) {
+            for (int i = 0; i < bins.length; i++) {
                 bins[i] = new AtomicLong(0);
             }
             maxNanos = new AtomicLong(0);
         }
 
         AtomicBoolean die = new AtomicBoolean(false);
-        public void die(){
+
+        public void die() {
             die.set(true);
         }
+
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 try {
                     sleep(2000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                if(die.get()) {
+                if (die.get()) {
                     return;
                 }
                 printer.log(name, snap());
             }
         }
-
 
 
         public interface LatPrinter {
@@ -399,9 +413,9 @@ public class Utils {
         private LatRet snap() {
             long[] mybins = new long[bins.length];
             long mytotal = 0;
-            for(int i=0; i<bins.length; i++) {
+            for (int i = 0; i < bins.length; i++) {
                 mybins[i] = bins[i].get();
-                mytotal+=mybins[i];
+                mytotal += mybins[i];
             }
 
             long myMaxNanos = maxNanos.get();
@@ -409,20 +423,20 @@ public class Utils {
             double[] nanos = new double[pTiles.length];
             int index = 0;
             long cumulative = 0;
-            for(int i=0; i<pTiles.length; i++) {
-                long max = (long)((mytotal*pTiles[i])/100.0);
-                while(index < mybins.length && mybins[index] + cumulative <  max) {
-                    cumulative+=mybins[index];
+            for (int i = 0; i < pTiles.length; i++) {
+                long max = (long) ((mytotal * pTiles[i]) / 100.0);
+                while (index < mybins.length && mybins[index] + cumulative < max) {
+                    cumulative += mybins[index];
                     index++;
                 }
 
                 long mul = 1;
                 int temp = index;
-                while(temp >= 1000) {
+                while (temp >= 1000) {
                     temp -= 1000;
                     mul *= 1000;
                 }
-                nanos[i] = (temp+1)*mul;
+                nanos[i] = (temp + 1) * mul;
             }
             reset();
             return new LatRet(mytotal, myMaxNanos, nanos, pTiles);
@@ -431,7 +445,7 @@ public class Utils {
         public static class LatDefaultPrinter implements LatPrinter {
             @Override
             public void log(String name, LatRet ret) {
-                log.debug("{}, {}",name, ret);
+                log.debug("{}, {}", name, ret);
             }
         }
 
@@ -445,30 +459,33 @@ public class Utils {
 
             @Override
             public String toString() {
-                if(total==0) {
+                if (total == 0) {
                     return "No data points";
                 }
                 DecimalFormat df = new DecimalFormat("###.##");
                 String s = String.format("max:%s", timeFormat(maxNanos, df));
-                for(int i = nanos.length-1; i>=0; i--) {
-                    s+=pTiles[i]+"%:"+timeFormat(nanos[i], df);
+                for (int i = nanos.length - 1; i >= 0; i--) {
+                    s += pTiles[i] + "%:" + timeFormat(nanos[i], df);
                 }
                 return s;
             }
 
             public static String timeFormat(double t, DecimalFormat df) {
-                if(t<1000) {
-                    return df.format(t)+"ns ";
-                } else if (t<1000_000) {
-                    return df.format(t/1000)+"us ";
-                } else if (t<1000_000_000){
-                    return df.format(t/1000_000)+"ms ";
+                if (t < 1000) {
+                    return df.format(t) + "ns ";
+                } else if (t < 1000_000) {
+                    return df.format(t / 1000) + "us ";
+                } else if (t < 1000_000_000) {
+                    return df.format(t / 1000_000) + "ms ";
                 } else {
-                    return df.format(t/1000_000_000)+"s ";
+                    return df.format(t / 1000_000_000) + "s ";
                 }
             }
+
             //for objectmapper
-            public LatRet(){}
+            public LatRet() {
+            }
+
             public LatRet(long total, long maxNanos, double[] nanos, double[] pTiles) {
                 this.nanos = nanos;
                 this.pTiles = pTiles;
@@ -478,22 +495,7 @@ public class Utils {
             }
         }
     }
-    public static void main(String[] args) throws InterruptedException {
-        //log.debug("{}", httpPostJson("http://posttestserver.com/post.php", "f u"));
-        //log.debug("{}", httpPostJson("http://httpbin.org/post", "f u"));
-        Utils u = new Utils();
-        u.go();
-    }
 
-    private void go() throws InterruptedException {
-        Timer t = new Timer("ASfd");
-        int c = 0;
-        for (int i = 0; i < 10000000; i++) {
-            t.cumulativeCount(c++);
-            Thread.sleep(100);
-        }
-
-    }
 
     public static class Timer extends Thread {
 
@@ -535,8 +537,10 @@ public class Utils {
         public void setPrinter(Printer printer) {
             this.printer = printer;
         }
+
         AtomicBoolean die = new AtomicBoolean(false);
-        public void die(){
+
+        public void die() {
             die.set(true);
         }
 
@@ -544,15 +548,15 @@ public class Utils {
         public void run() {
             reset();
 
-            while(true) {
+            while (true) {
                 try {
                     sleep(2000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                if(enabled.get()) doLog();
-                if(interrupted()) break;
-                if(die.get()) {
+                if (enabled.get()) doLog();
+                if (interrupted()) break;
+                if (die.get()) {
                     break;
                 }
             }
@@ -576,17 +580,17 @@ public class Utils {
         }
 
         public Ret snap() {
-            if(beginTime <0) throw new RuntimeException("not initialized");
+            if (beginTime < 0) throw new RuntimeException("not initialized");
             long now = System.nanoTime();
             long ops = opsSinceLastSnapshot.getAndSet(0);
             long cumulativeOps = opsSoFar.addAndGet(ops);
 
-            double qps = ops *1e9/(now- lastSnapshotTime);
-            double totalqps = (cumulativeOps)*1e9/(now - beginTime);
+            double qps = ops * 1e9 / (now - lastSnapshotTime);
+            double totalqps = (cumulativeOps) * 1e9 / (now - beginTime);
 
             lastSnapshotTime = now;
 
-            return new Ret((long)qps, (long)totalqps, ops, cumulativeOps);
+            return new Ret((long) qps, (long) totalqps, ops, cumulativeOps);
         }
 
         public static class Ret implements Serializable {
@@ -600,27 +604,22 @@ public class Utils {
             }
 
             // for objectmapper
-            public Ret(){}
+            public Ret() {
+            }
 
             @Override
             public String toString() {
-//                return "Ret{" +
-//                        "qps=" + format(qps) +
-//                        ", totalQps=" + format(totalQps) +
-//                        ", ops=" + format(ops) +
-//                        ", totalOps=" + format(totalOps) +
-//                        '}';
-                return String.format("qps:%s tqps:%s", format(qps), format(totalOps));
+                return String.format("qps:%s ops:%s", format(qps), format(totalOps));
             }
 
             String format(long x) {
-                String s = ""+x;
+                String s = "" + x;
                 StringBuilder ss = new StringBuilder();
-                for (int i = 0; i <s.length() ; i++) {
-                    if(i%3==0 && i>0) {
+                for (int i = 0; i < s.length(); i++) {
+                    if (i % 3 == 0 && i > 0) {
                         ss.append("_");
                     }
-                    ss.append(s.charAt(s.length()-i-1));
+                    ss.append(s.charAt(s.length() - i - 1));
 
                 }
 //                return ss.reverse().toString();
@@ -635,7 +634,7 @@ public class Utils {
         public static class DefaultPrinter implements Printer {
             @Override
             public void log(String name, Ret ret) {
-                log.debug("{} {}",name, ret);
+                log.debug("{} {}", name, ret);
             }
         }
     }

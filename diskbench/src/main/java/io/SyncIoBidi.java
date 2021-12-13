@@ -2,7 +2,6 @@ package io;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sha.Recorder;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -10,10 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 import static sha.Utils.*;
@@ -50,47 +46,52 @@ public class SyncIoBidi
     /**
      * All teh code from here:
      */
-    Recorder recorder = new Recorder(SyncIo.class.getSimpleName());
-    Timer trpt = new Timer(recorder, "serverTrpt");
-    //    AtomicInteger pending = new AtomicInteger(0);
-    LatencyTimer lt = new LatencyTimer(recorder, "serverLat");
-    CyclicBarrier barrier;
+    Timer trpt;
+    LatencyTimer lt;
+//    Recorder recorder = new Recorder(SyncIo.class.getSimpleName());
+//    Timer trpt = new Timer(recorder, "serverTrpt");
+//    LatencyTimer lt = new LatencyTimer(recorder, "serverLat");
+
+
     public void go() throws Exception {
-        int cpus = Runtime.getRuntime().availableProcessors() / 2 ; // because we will be launching in pairs
-        List<Integer> threads = new ArrayList<>();
-        for(int i=1; i<=cpus; i++) {
-            threads.add(i);
-        }
-        for(int i=2*cpus; i<=2048; i*=2) {
-            threads.add(i);
-        }
-        int count = 0;
-        outer:for (Integer thread : threads) {
-            for(long size=64; size<=1024*1024; size*=2) {
-                for(long pending=1; pending<=1024*1024; pending*=4) {
-
-                    if(thread*size > 1024*1024*1024) {
-                        continue;
-                    }
-                    System.out.println();
-                    System.out.println();
-                    System.out.println("starting new run for thread="+thread+" size="+size);
-                    recorder.startRun(new MyRun(thread, (int)size, pending));
-                    oneTest(thread, (int)size, pending);
-                    count++;
-                    recorder.finish();
-
-//                if(count==2) {
-//                    break outer;
+//        int cpus = Runtime.getRuntime().availableProcessors() / 2 ; // because we will be launching in pairs
+//        List<Integer> threads = new ArrayList<>();
+//        for(int i=1; i<=cpus; i++) {
+//            threads.add(i);
+//        }
+//        for(int i=2*cpus; i<=2048; i*=2) {
+//            threads.add(i);
+//        }
+//        int count = 0;
+//        outer:for (Integer thread : threads) {
+//            for(long size=10240; size<=10240; size*=2) {
+//                for(long pending=1024; pending<=1024; pending*=4) {
+//
+//                    if(thread*size > 1024*1024*1024) {
+//                        continue;
+//                    }
+//                    System.out.println();
+//                    System.out.println();
+//                    System.out.println("starting new run for thread="+thread+" size="+size);
+//                    recorder.startRun(new MyRun(thread, (int)size, pending));
+//                    oneTest(thread, (int)size, (int)size, pending);
+//                    count++;
+//                    recorder.finish();
+//
 //                }
-                }
-            }
-        }
+//            }
+//        }
+
+
+        trpt = new Timer( "serverTrpt");
+        lt = new LatencyTimer( "serverLat");
+
+        oneTest(1, 1024, 128, 10240);
 
     }
 
 
-    public void oneTest(int pairs, final int size, final long pending) throws Exception {
+    public void oneTest(int pairs, final int clientSize, int serverSize, final long pending) throws Exception {
         final int port = 10081;
 
         for (int i=0; i<pairs; i++) {
@@ -99,7 +100,7 @@ public class SyncIoBidi
                 @Override
                 public void run() {
                     try {
-                        goServer(port+ finalI, size);
+                        goServer(port+ finalI, clientSize, serverSize);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -113,7 +114,7 @@ public class SyncIoBidi
                 @Override
                 public void run() {
                     try {
-                        goClientWriter(port+ finalI, size, pending);
+                        goClientWriter(port+ finalI, clientSize, serverSize, pending);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -123,52 +124,72 @@ public class SyncIoBidi
     }
 
 
-    private void goServer(int port, final int size) throws Exception {
+    private void goServer(int port, final int clientSize, final int serverSize) throws Exception {
         ServerSocketChannel ssc = ServerSocketChannel.open();
-        ssc.bind(new InetSocketAddress("localhost", port));
+        ssc.bind(new InetSocketAddress("127.0.0.1", port));
+        log.debug("server started listening on port {}", port);
         final SocketChannel socketChannel = ssc.accept();
-        final ConcurrentLinkedQueue<Long> abq = new ConcurrentLinkedQueue<>();
+        final LinkedBlockingQueue<Long> abq = new LinkedBlockingQueue<>();
+        ByteBuffer bf = ByteBuffer.allocate(clientSize);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ByteBuffer sb = ByteBuffer.allocate(size);
+                ByteBuffer sb = ByteBuffer.allocate(serverSize);
                 while (true) {
                     try {
+                        busySpin();
                         sb.clear();
-//                        sb.putLong(0, abq.take());
+                        sb.putLong(0, abq.take());
                         while(sb.remaining()>0) {
                             socketChannel.write(sb);
                         }
 
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             }
+
+            private void busySpin() {
+                int a = 0;
+                int count = 0;
+                for(int i=0; i<10; i++) {
+                    for(int j=0; j<clientSize; j++) {
+                        count += bf.get(j);
+                        a++;
+                    }
+                }
+                if(count==Integer.MAX_VALUE) {
+                    log.debug("unlucky");
+                }
+//                log.debug("spinning for {}", a);
+            }
         }).start();
-        ByteBuffer bf = ByteBuffer.allocate(size);
         while(true) {
             while(bf.remaining() > 0) {
                 int ret = socketChannel.read(bf);
             }
             bf.clear();
             Long x = bf.getLong(0);
-//            abq.put(x);
+            abq.put(x);
         }
     }
 
-    private void goClientWriter(int i, int port, long pend) throws Exception {
-        ByteBuffer bf = ByteBuffer.allocate(64);
+    private void goClientWriter(int port, final int clientSize, final int serverSize, long pend) throws Exception {
+        ByteBuffer bf = ByteBuffer.allocate(clientSize);
         final Semaphore pending = new Semaphore((int)pend);
         final SocketChannel socketChannel = SocketChannel.open();
-        log.debug("connected");
-        socketChannel.connect(new InetSocketAddress("localhost", port));
+        log.debug("trying connect on {} ", port);
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", port));
         log.debug("finished connect");
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ByteBuffer sb = ByteBuffer.allocate(64);
+                ByteBuffer sb = ByteBuffer.allocate(serverSize);
                 while (true) {
                     try {
                         while(sb.remaining() > 0) {
@@ -177,7 +198,7 @@ public class SyncIoBidi
                         pending.release();
                         sb.clear();
                         lt.count(System.nanoTime()-sb.getLong(0));
-                        trpt.count(2);
+                        trpt.count(clientSize);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

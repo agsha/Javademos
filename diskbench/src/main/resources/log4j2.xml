@@ -2,11 +2,11 @@
 <Configuration status="ERROR" monitorInterval="5">
     <Appenders>
         <Console name="CONSOLE" target="SYSTEM_OUT" >
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %l - %msg%n" />
+            <PatternLayout pattern="%t %-5level %l - %msg%n" />
         </Console>
         <Console name="utilsAppender" target="SYSTEM_OUT" >
             <!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %l - %msg%n" />-->
-            <PatternLayout pattern="%msg%n" />
+            <PatternLayout pattern="%t-%msg%n" />
         </Console>
 
         <!-- %c is logger name, %l is location (sha.App.go(App.java:17)) %L is line number-->
@@ -38,6 +38,7 @@
         <Logger name="sha1" level="all"/>
         <Logger name="io" level="all"/>
         <Logger name="mixed" level="all"/>
+        <Logger name="sharpc" level="all"/>
         <Logger name="sha.Utils" level="all" additivity="false">
             <AppenderRef ref="utilsAppender" />
         </Logger>

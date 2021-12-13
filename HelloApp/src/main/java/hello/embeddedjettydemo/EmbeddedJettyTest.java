@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.apache.http.client.fluent.Content;
-import org.apache.http.client.fluent.Request;
 import org.eclipse.jetty.server.Server;
 
 import javax.servlet.ServletException;
@@ -13,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import static org.junit.Assert.*;
 
 /**
  * Created by sgururaj on 2/8/15.
@@ -32,9 +29,14 @@ public class EmbeddedJettyTest {
         EmbeddedJetty.P embeddedJettyP = in.getInstance(EmbeddedJetty.P.class);
         Server server = embeddedJettyP.get(8080, ImmutableList.of(new EmbeddedJetty.ServletInfo(new HelloServlet(), "/hello")));
         server.start();
-        Content content = Request.Get("http://localhost:8080/hello?query=helloworld")
-                .execute().returnContent();
-        assertEquals("helloworld", content.asString());
+        server.join();
+//        Utils.Timer t = new Utils.Timer("");
+//        while(true) {
+//            Content content = Request.Get("http://localhost:8080/hello?query=helloworld")
+//                    .execute().returnContent();
+//            assertEquals("helloworld", content.asString());
+//            t.count();
+//        }
     }
 
     public static class HelloServlet extends HttpServlet {

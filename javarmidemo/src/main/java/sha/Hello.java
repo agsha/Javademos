@@ -8,4 +8,5 @@ import java.rmi.RemoteException;
  */
 public interface Hello extends Remote {
     String echo(String what) throws RemoteException;
+    String exceptionExample() throws RemoteException, MyException;
 }
