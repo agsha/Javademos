@@ -1,0 +1,10 @@
+template: Hello, %s!
+defaultName: Stranger
+server:
+  type: simple
+  applicationContextPath: /
+  adminContextPath: /admin
+  requestLog:
+    type: external
+logging:
+  type: external

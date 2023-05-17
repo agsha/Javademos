@@ -144,7 +144,7 @@ public class Utils {
         }
     }
 
-    public static <T> T readJson(String path, TypeReference tp) {
+    public static <T> T readJson(String path, TypeReference<T> tp) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(Files.readAllBytes(Paths.get(path)), tp);
@@ -157,7 +157,7 @@ public class Utils {
     public static int random(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max);
     }
-    public static <T> T readJsonFromClasspath(String path, TypeReference tp) {
+    public static <T> T readJsonFromClasspath(String path, TypeReference<T> tp) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(ClassLoader.getSystemResourceAsStream(path), tp);
